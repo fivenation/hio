@@ -1,0 +1,8 @@
+{
+  "id": 0,
+  "name": "Chest",
+  "type": "prop",
+  "size_3d": [2.0, 1.0, 1.0],
+  "spritesheet": "objects/0_chest.png",
+  "frame_size": 96
+}
