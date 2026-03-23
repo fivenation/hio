@@ -1,9 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
-import 'package:hio/graphics/block/block_defenition.dart';
-import 'package:hio/graphics/rendering/camera.dart';
+import 'package:hio/graphics/blocks/models/block_defenition.dart';
+import 'package:hio/graphics/core/camera.dart';
 import 'package:hio/graphics/entities/player.dart';
-import 'package:hio/graphics/world/world_map.dart';
+import 'package:hio/graphics/world/models/world_map.dart';
 import 'face_renderer.dart';
 
 class _RenderFace {

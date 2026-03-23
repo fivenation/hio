@@ -1,4 +1,4 @@
-import '../../graphics/core/rect_uv.dart';
+import '../../core/rect_uv.dart';
 
 class BlockTextures {
   final RectUV top;

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:hio/graphics/block/block_defenition.dart';
-import 'block_textures.dart';
+import 'package:hio/graphics/blocks/models/block_defenition.dart';
+import 'models/block_textures.dart';
 import 'block_registry.dart';
-import '../../graphics/core/rect_uv.dart';
+import '../core/rect_uv.dart';
 
 /// Загрузчик определений блоков из JSON файлов.
 class BlockLoader {

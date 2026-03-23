@@ -1,6 +1,6 @@
-import 'package:hio/graphics/world/lighting.dart';
+import 'package:hio/graphics/world/models/lighting.dart';
 
-import 'world_map.dart';
+import 'models/world_map.dart';
 import '../entities/player.dart';
 
 /// Игровой мир. Объединяет карту и игрока, управляет коллизиями.

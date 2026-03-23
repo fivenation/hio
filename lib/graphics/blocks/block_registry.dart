@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:hio/graphics/block/block_defenition.dart';
+import 'package:hio/graphics/blocks/models/block_defenition.dart';
 
-import 'block_textures.dart';
+import 'models/block_textures.dart';
 import '../core/rect_uv.dart';
 
 class BlockRegistry {

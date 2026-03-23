@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'world_map.dart';
+import 'models/world_map.dart';
 
 class WorldLoader {
   static Future<WorldMap> loadFromJson(String name) async {

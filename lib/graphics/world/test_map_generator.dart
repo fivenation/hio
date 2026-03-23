@@ -1,5 +1,5 @@
 // lib/graphics/world/test_map_generator.dart
-import 'world_map.dart';
+import 'models/world_map.dart';
 
 class TestMapGenerator {
   static WorldMap generateRoomMap() {

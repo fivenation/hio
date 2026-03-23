@@ -11,9 +11,9 @@ import '../features/input/input_manager.dart';
 import '../graphics/entities/player.dart';
 import '../graphics/world/game_world.dart';
 import '../graphics/world/test_map_generator.dart';
-import '../graphics/rendering/camera.dart';
-import '../graphics/block/block_registry.dart';
-import '../graphics/rendering/texture_atlas.dart';
+import 'core/camera.dart';
+import 'blocks/block_registry.dart';
+import 'rendering/textures/texture_atlas.dart';
 import '../graphics/rendering/minimap.dart';
 
 /// Главный игровой виджет Flame.

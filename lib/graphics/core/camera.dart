@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'dart:ui';
-import '../../graphics/entities/player.dart';
+import '../entities/player.dart';
 
 class ProjectionCamera {
   double screenWidth;

@@ -47,7 +47,6 @@ extern "C" {
         ShowCursor(FALSE);
         isCaptured = true;
         
-        // Сбрасываем накопленные дельты при захвате
         rawDeltaX = 0;
         rawDeltaY = 0;
     }

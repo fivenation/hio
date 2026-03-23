@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/services.dart';
-import '../core/rect_uv.dart';
+import '../../core/rect_uv.dart';
 
 class TextureAtlasManager {
   static final TextureAtlasManager _instance = TextureAtlasManager._internal();
