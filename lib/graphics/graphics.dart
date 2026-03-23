@@ -4,13 +4,14 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hio/features/settings/settings_cubit.dart';
+import 'package:hio/features/settings/tools/fps_counder.dart';
+import 'package:hio/graphics/rendering/blocks/world_renderer.dart';
 import '../features/input/game_controls.dart';
 import '../features/input/input_manager.dart';
 import '../graphics/entities/player.dart';
 import '../graphics/world/game_world.dart';
 import '../graphics/world/test_map_generator.dart';
 import '../graphics/rendering/camera.dart';
-import '../graphics/rendering/world_renderer.dart';
 import '../graphics/block/block_registry.dart';
 import '../graphics/rendering/texture_atlas.dart';
 import '../graphics/rendering/minimap.dart';
@@ -27,6 +28,7 @@ class AppGraphics extends FlameGame
   );
   late final WorldRenderer _worldRenderer;
   late final Minimap _minimap;
+  late final FpsCounter _fpsCounter;
   late final SettingsCubit _settingsCubit;
 
   bool _isInputLocked = false; // Ручная блокировка (меню, инвентарь)
@@ -66,6 +68,8 @@ class AppGraphics extends FlameGame
       settingsCubit: _settingsCubit,
     );
 
+    _fpsCounter = FpsCounter();
+
     // Рендерер
     _worldRenderer = WorldRenderer(
       camera: _camera,
@@ -101,6 +105,8 @@ class AppGraphics extends FlameGame
   void update(double dt) {
     super.update(dt);
 
+    _fpsCounter.update(DateTime.now().millisecondsSinceEpoch / 1000);
+
     // Обновляем только если управление не заблокировано И приложение активно
     if (!_isInputLocked && !_isAppPaused) {
       _gameControls.update(dt);
@@ -120,6 +126,8 @@ class AppGraphics extends FlameGame
     canvas.translate(size.x - 210, 10);
     _minimap.render(canvas, _world);
     canvas.restore();
+
+    _fpsCounter.render(canvas, Size(size.x, size.y));
 
     super.render(canvas);
   }

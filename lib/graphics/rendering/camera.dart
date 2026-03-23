@@ -31,44 +31,27 @@ class ProjectionCamera {
   }
 
   Offset? worldToScreen(double x, double y, double z, Player player) {
-    double dx = x - player.x;
-    double dy = y - player.y;
-    double dz = z - playerHeight;
+  double dx = x - player.x;
+  double dy = y - player.y;
+  double dz = z - playerHeight;
 
-    double cosA = cos(player.angle);
-    double sinA = sin(player.angle);
+  double cosA = cos(player.angle);
+  double sinA = sin(player.angle);
 
-    double rotatedX = dx * sinA - dy * cosA;
-    double rotatedY = dx * cosA + dy * sinA;
+  double rotatedX = dx * sinA - dy * cosA;
+  double rotatedY = -(dx * cosA + dy * sinA);
 
-    // Отладка для первого блока
-    if (x == 25 && y == 25 && z == 4) {
-      print('Test block at (25,25,4):');
-      print('  dx=$dx, dy=$dy, dz=$dz');
-      print('  rotatedX=$rotatedX, rotatedY=$rotatedY');
-      print('  player angle=${player.angle}');
-    }
-
-    if (rotatedY <= 0.1) {
-      if (x == 25 && y == 25 && z == 4) {
-        print('  BLOCK BEHIND CAMERA! rotatedY=$rotatedY');
-      }
-      return null;
-    }
-
-    double scale = screenWidth / 2 / tan(horizontalFovRad / 2);
-    double screenX = screenWidth / 2 + rotatedX / rotatedY * scale;
-    double screenY =
-        horizonY - (dz / rotatedY) * scale + tan(player.pitch) * scale;
-
-    if (x == 25 && y == 25 && z == 4) {
-      print('  screen: ($screenX, $screenY)');
-      print('  screenWidth=$screenWidth, screenHeight=$screenHeight');
-      print('  scale=$scale');
-    }
-
-    return Offset(screenX, screenY);
+  if (rotatedY <= 0.1) {
+    return null;
   }
+
+  double scale = screenWidth / 2 / tan(horizontalFovRad / 2);
+  double screenX = screenWidth / 2 + rotatedX / rotatedY * scale;
+  double screenY =
+      horizonY - (dz / rotatedY) * scale + tan(player.pitch) * scale;
+
+  return Offset(screenX, screenY);
+}
 
   List<Offset> projectPoints(
       List<(double, double, double)> points, Player player) {

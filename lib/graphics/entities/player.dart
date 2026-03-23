@@ -50,6 +50,13 @@ class Player {
   void setRotate(double delta) => _rotateDelta = delta;
   void setPitch(double delta) => _pitchDelta = delta;
 
+  void debugAngle() {
+    print(
+        'Player angle: ${(angle * 180 / pi).toStringAsFixed(1)}° (${angle.toStringAsFixed(3)} rad)');
+    print(
+        '  Direction: dx=${cos(angle).toStringAsFixed(2)}, dy=${sin(angle).toStringAsFixed(2)}');
+  }
+
   (double dx, double dy) calculateMovement(double dt) {
     double moveX = 0.0;
     double moveY = 0.0;

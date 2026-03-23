@@ -1,12 +1,11 @@
 import 'dart:math';
-import 'dart:ui';
+import 'package:flutter/material.dart';
+
 import '../world/game_world.dart';
 
-/// Простая 2D мини-карта для отладки.
-/// Показывает вид сверху: стены, игрока, направление взгляда.
 class Minimap {
-  final int size = 200; // пикселей
-  final int cellSize = 4; // пикселей на клетку
+  final int size = 200;
+  final int cellSize = 4;
 
   void render(Canvas canvas, GameWorld world) {
     final map = world.map;
@@ -14,9 +13,11 @@ class Minimap {
 
     // Рисуем фон
     final bgPaint = Paint()..color = const Color(0xFF000000);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()), bgPaint);
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()),
+      bgPaint,
+    );
 
-    // Определяем область карты для отображения (центр на игроке)
     final centerX = player.x.toInt();
     final centerY = player.y.toInt();
     final halfView = (size / cellSize / 2).floor();
@@ -28,7 +29,6 @@ class Minimap {
 
         if (x < 0 || x >= map.width || y < 0 || y >= map.height) continue;
 
-        // Проверяем блок на уровне Z=0
         final blockId = map.getBlockId(x, y, 0);
         final isWall = blockId != 0;
 
@@ -38,8 +38,12 @@ class Minimap {
         final paint = Paint()
           ..color = isWall ? const Color(0xFF808080) : const Color(0xFF202020);
         canvas.drawRect(
-          Rect.fromLTWH(screenX.toDouble(), screenY.toDouble(),
-              cellSize.toDouble(), cellSize.toDouble()),
+          Rect.fromLTWH(
+            screenX.toDouble(),
+            screenY.toDouble(),
+            cellSize.toDouble(),
+            cellSize.toDouble(),
+          ),
           paint,
         );
       }
@@ -50,15 +54,61 @@ class Minimap {
     final playerY = (size / 2).toDouble();
     final playerPaint = Paint()..color = const Color(0xFFFF0000);
     canvas.drawCircle(
-        Offset(playerX, playerY), cellSize.toDouble(), playerPaint);
+      Offset(playerX, playerY),
+      cellSize.toDouble(),
+      playerPaint,
+    );
 
-    // Рисуем направление взгляда
-    final directionX = playerX + cos(player.angle) * cellSize * 3;
-    final directionY = playerY + sin(player.angle) * cellSize * 3;
+    // Направление взгляда (одна правильная линия)
+    final dirX = playerX + cos(player.angle) * cellSize * 4;
+    final dirY = playerY - sin(player.angle) * cellSize * 4; // минус для Y
+
     final dirPaint = Paint()
       ..color = const Color(0xFFFFFF00)
       ..strokeWidth = 2;
     canvas.drawLine(
-        Offset(playerX, playerY), Offset(directionX, directionY), dirPaint);
+      Offset(playerX, playerY),
+      Offset(dirX, dirY),
+      dirPaint,
+    );
+
+// Текст с углом для отладки
+    final angleDeg = (player.angle * 180 / pi).toStringAsFixed(0);
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'Angle: $angleDeg°',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          backgroundColor: Colors.black54,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, const Offset(5, 5));
+
+    // Подписи направлений
+    final labels = [
+      ('N', playerX, playerY - 15),
+      ('S', playerX, playerY + 15),
+      ('E', playerX + 15, playerY),
+      ('W', playerX - 15, playerY),
+    ];
+
+    for (final (label, x, y) in labels) {
+      final labelPainter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: const TextStyle(
+            color: Colors.green,
+            fontSize: 8,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      labelPainter.layout();
+      labelPainter.paint(canvas, Offset(x, y));
+    }
   }
 }
