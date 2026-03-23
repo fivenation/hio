@@ -5,16 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hio/features/settings/settings_cubit.dart';
 import 'package:hio/features/settings/tools/fps_counder.dart';
+import 'package:hio/features/input/game_controls.dart';
+import 'package:hio/features/input/input_manager.dart';
+import 'package:hio/graphics/blocks/block_registry.dart';
+import 'package:hio/graphics/core/camera.dart';
+import 'package:hio/graphics/entities/player.dart';
 import 'package:hio/graphics/rendering/blocks/world_renderer.dart';
-import '../features/input/game_controls.dart';
-import '../features/input/input_manager.dart';
-import '../graphics/entities/player.dart';
-import '../graphics/world/game_world.dart';
-import '../graphics/world/test_map_generator.dart';
-import 'core/camera.dart';
-import 'blocks/block_registry.dart';
-import 'rendering/textures/texture_atlas.dart';
-import '../graphics/rendering/minimap.dart';
+import 'package:hio/graphics/rendering/minimap.dart';
+import 'package:hio/graphics/world/game_world.dart';
+import 'package:hio/graphics/rendering/textures/texture_atlas.dart';
+import 'package:hio/graphics/world/models/lighting.dart';
+import 'package:hio/graphics/world/models/player_data.dart';
+import 'package:hio/graphics/core/constants.dart';
+import 'package:hio/graphics/world/models/world_map.dart';
 
 /// Главный игровой виджет Flame.
 class AppGraphics extends FlameGame
@@ -22,17 +25,25 @@ class AppGraphics extends FlameGame
   late final GameWorld _world;
   late final InputManager _inputManager;
   late final GameControls _gameControls;
-  late final ProjectionCamera _camera = ProjectionCamera(
-    screenWidth: size.x,
-    screenHeight: size.y,
-  );
   late final WorldRenderer _worldRenderer;
   late final Minimap _minimap;
   late final FpsCounter _fpsCounter;
   late final SettingsCubit _settingsCubit;
 
-  bool _isInputLocked = false; // Ручная блокировка (меню, инвентарь)
-  bool _isAppPaused = false; // Автоматическая пауза при потере фокуса
+  // Important!
+  late final ProjectionCamera _camera = ProjectionCamera(
+    screenWidth: size.x,
+    screenHeight: size.y,
+  );
+
+  // Загруженные данные
+  final WorldMap _map;
+  final PlayerData _playerData;
+  final double _ambientLight;
+  final List<LightSource> _lightSources;
+
+  bool _isInputLocked = false;
+  bool _isAppPaused = false;
 
   // Колбэки для внешнего UI
   VoidCallback? onInputLocked;
@@ -40,13 +51,21 @@ class AppGraphics extends FlameGame
   VoidCallback? onAppPaused;
   VoidCallback? onAppResumed;
 
-  AppGraphics({required SettingsCubit settingsCubit}) {
-    _settingsCubit = settingsCubit;
-  }
+  AppGraphics({
+    required WorldMap map,
+    required PlayerData playerData,
+    required double ambientLight,
+    required List<LightSource> lightSources,
+    required SettingsCubit settingsCubit,
+  })  : _map = map,
+        _playerData = playerData,
+        _ambientLight = ambientLight,
+        _lightSources = lightSources,
+        _settingsCubit = settingsCubit;
 
   @override
   Future<void> onLoad() async {
-    // Регистрируем блоки
+    // Регистрируем блоки (пока хардкод, позже из JSON)
     final registry = BlockRegistry.instance;
     registry.registerDefaultBlocks();
 
@@ -55,10 +74,21 @@ class AppGraphics extends FlameGame
     textureManager.setTextureSize(64);
     await textureManager.loadAtlas(0);
 
-    // Создаём карту
-    final map = TestMapGenerator.generateRoomMap();
-    final player = Player(x: 35, y: 35, angle: 3.14);
-    _world = GameWorld(map: map, player: player);
+    // Создаём игрока из загруженных данных
+    final player = Player(
+      x: _playerData.x,
+      y: _playerData.y,
+      angle: _playerData.angle,
+      pitch: GraphicsConsts.defaultPlayerPitch,
+    );
+
+    // Создаём мир
+    _world = GameWorld(
+      map: _map,
+      player: player,
+      ambientLight: _ambientLight,
+      lightSources: _lightSources,
+    );
 
     // Система ввода
     _inputManager = InputManager();
@@ -88,7 +118,6 @@ class AppGraphics extends FlameGame
 
   @override
   void onRemove() {
-    // Отписываемся при удалении
     WidgetsBinding.instance.removeObserver(this);
     super.onRemove();
   }
@@ -96,7 +125,6 @@ class AppGraphics extends FlameGame
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    print('Game resized: ${size.x}x${size.y}');
     _camera.resize(size.x, size.y);
   }
 
@@ -145,10 +173,8 @@ class AppGraphics extends FlameGame
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        // Приложение вернулось на передний план
         _isAppPaused = false;
         onAppResumed?.call();
-        // Если управление не заблокировано вручную, восстанавливаем захват мыши
         if (!_isInputLocked) {
           _inputManager.captureMouse();
         }
@@ -157,10 +183,8 @@ class AppGraphics extends FlameGame
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:
-        // Приложение ушло в фон или потеряло фокус
         _isAppPaused = true;
         onAppPaused?.call();
-        // Всегда освобождаем мышь при потере фокуса
         _inputManager.releaseMouse();
         break;
 
@@ -171,7 +195,6 @@ class AppGraphics extends FlameGame
 
   // --- Управление режимом блокировки ---
 
-  /// Заблокировать управление (открыть меню, инвентарь)
   void lockInput() {
     if (_isInputLocked) return;
     _isInputLocked = true;
@@ -179,18 +202,15 @@ class AppGraphics extends FlameGame
     onInputLocked?.call();
   }
 
-  /// Разблокировать управление (закрыть меню, инвентарь)
   void unlockInput() {
     if (!_isInputLocked) return;
     _isInputLocked = false;
-    // Если приложение активно, захватываем мышь
     if (!_isAppPaused) {
       _inputManager.captureMouse();
     }
     onInputUnlocked?.call();
   }
 
-  /// Переключить блокировку управления
   void toggleInputLock() {
     if (_isInputLocked) {
       unlockInput();
@@ -213,10 +233,6 @@ class AppGraphics extends FlameGame
     } else if (event is KeyUpEvent) {
       _inputManager.onKeyUp(event.logicalKey);
     }
-
-    if (event is KeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.escape) {}
-
     return KeyEventResult.handled;
   }
 }

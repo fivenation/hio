@@ -1,0 +1,19 @@
+{
+    "name": "room",
+    "displayName": "Тестовая комната",
+    "width": 70,
+    "height": 70,
+    "player": {
+      "x": 35.0,
+      "y": 35.0,
+      "angle": 3.14
+    },
+    "ambientLight": 1.0,
+    "lightSources": [],
+    "blocks": [
+      [35, 35, 0, 1],
+      [35, 36, 0, 1],
+      [36, 35, 0, 1],
+      [36, 36, 0, 1]
+    ]
+  }

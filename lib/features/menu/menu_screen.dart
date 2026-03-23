@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hio/features/menu/test_graphics_screen.dart';
+import 'package:hio/features/map/map_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -21,11 +21,11 @@ class MenuScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const GraphicsScreen(),
+                    builder: (context) => const MapScreen(),
                   ),
                 );
               },
-              child: const Text('Test map'),
+              child: const Text('Играть'),
             ),
           ],
         ),

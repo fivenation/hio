@@ -31,3 +31,4 @@ flutter:
   assets:
   - resources/data/objects/
   - resources/images/objects/
+  - resources/maps/

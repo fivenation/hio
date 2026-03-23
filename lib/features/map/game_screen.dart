@@ -4,18 +4,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flame/game.dart';
 import 'package:hio/features/settings/model/settings_model.dart';
 import 'package:hio/features/settings/model/settings_state.dart';
+import 'package:hio/features/settings/settings_content.dart';
 import 'package:hio/features/settings/settings_cubit.dart';
 import 'package:hio/graphics/graphics.dart';
+import 'package:hio/graphics/world/models/lighting.dart';
+import 'package:hio/graphics/world/models/player_data.dart';
+import 'package:hio/graphics/world/models/world_map.dart';
 import 'package:window_manager/window_manager.dart';
 
-class GraphicsScreen extends StatefulWidget {
-  const GraphicsScreen({super.key});
+class GameScreen extends StatefulWidget {
+  final WorldMap map;
+  final PlayerData playerData;
+  final double ambientLight;
+  final List<LightSource> lightSources;
+
+  const GameScreen({
+    super.key,
+    required this.map,
+    required this.playerData,
+    required this.ambientLight,
+    required this.lightSources,
+  });
 
   @override
-  State<GraphicsScreen> createState() => _GraphicsScreenState();
+  State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GraphicsScreenState extends State<GraphicsScreen> with WindowListener {
+class _GameScreenState extends State<GameScreen> with WindowListener {
   late final AppGraphics _game;
   bool _showMenu = false;
   bool _showSettings = false;
@@ -29,7 +44,15 @@ class _GraphicsScreenState extends State<GraphicsScreen> with WindowListener {
     _initWindowManager();
 
     final settingsCubit = context.read<SettingsCubit>();
-    _game = AppGraphics(settingsCubit: settingsCubit);
+    
+    // Создаём игру с загруженными данными
+    _game = AppGraphics(
+      map: widget.map,
+      playerData: widget.playerData,
+      ambientLight: widget.ambientLight,
+      lightSources: widget.lightSources,
+      settingsCubit: settingsCubit,
+    );
 
     _game.onInputLocked = () {
       setState(() {
@@ -213,18 +236,18 @@ class _GraphicsScreenState extends State<GraphicsScreen> with WindowListener {
             if (_showAppPausedOverlay && !_showMenu && !_showSettings)
               Container(
                 color: Colors.black87,
-                child: Center(
+                child: const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 20),
-                      const Text(
+                      CircularProgressIndicator(),
+                      SizedBox(height: 20),
+                      Text(
                         'Приложение свернуто',
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
-                      const SizedBox(height: 10),
-                      const Text(
+                      SizedBox(height: 10),
+                      Text(
                         'Вернитесь в игру для продолжения',
                         style: TextStyle(color: Colors.grey),
                       ),
@@ -264,7 +287,7 @@ class _GraphicsScreenState extends State<GraphicsScreen> with WindowListener {
                     title: const Text('Настройки'),
                     content: SizedBox(
                       width: 350,
-                      child: _SettingsContent(
+                      child: SettingsContent(
                         onClose: _closeSettings,
                         onFullscreenChanged: _applyFullscreen,
                         onResolutionChanged: _applyResolution,
@@ -276,85 +299,6 @@ class _GraphicsScreenState extends State<GraphicsScreen> with WindowListener {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SettingsContent extends StatelessWidget {
-  final VoidCallback onClose;
-  final Future<void> Function(bool) onFullscreenChanged;
-  final Future<void> Function(Resolution) onResolutionChanged;
-
-  const _SettingsContent({
-    required this.onClose,
-    required this.onFullscreenChanged,
-    required this.onResolutionChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final settingsCubit = context.read<SettingsCubit>();
-
-    return BlocBuilder<SettingsCubit, SettingsState>(
-      builder: (context, state) {
-        final settings = state.settings;
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Чувствительность мыши', style: TextStyle(fontSize: 14)),
-            Slider(
-              value: settings.mouseSensitivity,
-              min: 0.002,
-              max: 0.05,
-              divisions: 48,
-              label: (settings.mouseSensitivity * 1000).toStringAsFixed(0),
-              onChanged: (value) {
-                settingsCubit.setMouseSensitivity(value);
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Text('Полноэкранный режим',
-                    style: TextStyle(fontSize: 14)),
-                const Spacer(),
-                Switch(
-                  value: settings.fullscreen,
-                  onChanged: (value) async {
-                    settingsCubit.setFullscreen(value);
-                    await onFullscreenChanged(value);
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text('Разрешение экрана', style: TextStyle(fontSize: 14)),
-            const SizedBox(height: 8),
-            DropdownButton<int>(
-              value: settings.resolutionIndex,
-              isExpanded: true,
-              items: settings.resolutions.asMap().entries.map((entry) {
-                return DropdownMenuItem<int>(
-                  value: entry.key,
-                  child: Text(entry.value.name),
-                );
-              }).toList(),
-              onChanged: (value) async {
-                if (value != null) {
-                  settingsCubit.setResolutionIndex(value);
-                  await onResolutionChanged(settings.resolutions[value]);
-                }
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: onClose,
-              child: const Text('Закрыть'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
