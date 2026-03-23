@@ -74,7 +74,6 @@ class AppGraphics extends FlameGame
     _worldRenderer = WorldRenderer(
       camera: _camera,
       map: _world.map,
-      renderDistance: 64,
     );
     _minimap = Minimap();
 

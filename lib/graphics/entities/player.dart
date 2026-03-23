@@ -1,29 +1,12 @@
 import 'dart:math';
+import 'package:hio/graphics/core/constants.dart';
 
-/// Игрок. Хранит позицию, угол обзора и состояние движения.
 class Player {
-  /// Позиция по X (метры)
   double x;
-
-  /// Позиция по Y (метры)
   double y;
-
-  /// Угол поворота (радианы). 0 = восток, π/2 = север.
   double angle;
-
-  /// Вертикальный угол (радианы). 0 = прямо, >0 = вверх, <0 = вниз.
   double pitch;
 
-  /// Скорость движения (м/с)
-  final double _speed;
-
-  /// Скорость поворота (рад/с)
-  final double _rotationSpeed;
-
-  /// Скорость наклона камеры (рад/с)
-  final double _pitchSpeed;
-
-  // Команды (накапливаются из ввода)
   bool _moveForward = false;
   bool _moveBackward = false;
   bool _strafeLeft = false;
@@ -39,9 +22,7 @@ class Player {
     double speed = 3.0,
     double rotationSpeed = 2.0,
     double pitchSpeed = 1.5,
-  })  : _pitchSpeed = pitchSpeed,
-        _rotationSpeed = rotationSpeed,
-        _speed = speed;
+  });
 
   void setMoveForward(bool active) => _moveForward = active;
   void setMoveBackward(bool active) => _moveBackward = active;
@@ -49,13 +30,6 @@ class Player {
   void setStrafeRight(bool active) => _strafeRight = active;
   void setRotate(double delta) => _rotateDelta = delta;
   void setPitch(double delta) => _pitchDelta = delta;
-
-  void debugAngle() {
-    print(
-        'Player angle: ${(angle * 180 / pi).toStringAsFixed(1)}° (${angle.toStringAsFixed(3)} rad)');
-    print(
-        '  Direction: dx=${cos(angle).toStringAsFixed(2)}, dy=${sin(angle).toStringAsFixed(2)}');
-  }
 
   (double dx, double dy) calculateMovement(double dt) {
     double moveX = 0.0;
@@ -84,15 +58,18 @@ class Player {
       moveY /= len;
     }
 
-    return (moveX * _speed * dt, moveY * _speed * dt);
+    return (
+      moveX * GraphicsConsts.playerSpeed * dt,
+      moveY * GraphicsConsts.playerSpeed * dt
+    );
   }
 
   void updateRotation(double dt) {
-    angle += _rotateDelta * _rotationSpeed * dt;
+    angle += _rotateDelta * GraphicsConsts.playerRotationSpeed * dt;
     angle %= 2 * pi;
     if (angle < 0) angle += 2 * pi;
 
-    pitch += _pitchDelta * _pitchSpeed * dt;
+    pitch += _pitchDelta * GraphicsConsts.playerPitchSpeed * dt;
     if (pitch > pi / 2) pitch = pi / 2;
     if (pitch < -pi / 2) pitch = -pi / 2;
 

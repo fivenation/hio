@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:hio/graphics/blocks/models/block_defenition.dart';
 import 'package:hio/graphics/blocks/block_registry.dart';
 import 'package:hio/graphics/core/camera.dart';
+import 'package:hio/graphics/core/constants.dart';
 import 'package:hio/graphics/entities/player.dart';
 import 'package:hio/graphics/world/game_world.dart';
 import 'package:hio/graphics/world/models/world_map.dart';
@@ -28,14 +29,9 @@ class WorldRenderer {
   final WorldMap _map;
   final List<_RenderFace> _allFaces = [];
 
-  int renderDistance;
-  final double fogStartDistance = 40.0;
-  final double fogEndDistance = 64.0;
-
   WorldRenderer({
     required ProjectionCamera camera,
     required WorldMap map,
-    this.renderDistance = 64,
   })  : _camera = camera,
         _faceRenderer = FaceRenderer(),
         _blockRegistry = BlockRegistry.instance,
@@ -46,10 +42,10 @@ class WorldRenderer {
 
     _allFaces.clear();
 
-    final startX = max(0, (player.x - renderDistance).floor());
-    final endX = min(_map.width - 1, (player.x + renderDistance).ceil());
-    final startY = max(0, (player.y - renderDistance).floor());
-    final endY = min(_map.height - 1, (player.y + renderDistance).ceil());
+    final startX = max(0, (player.x - GraphicsConsts.defaultRenderDistance).floor());
+    final endX = min(_map.width - 1, (player.x + GraphicsConsts.defaultRenderDistance).ceil());
+    final startY = max(0, (player.y - GraphicsConsts.defaultRenderDistance).floor());
+    final endY = min(_map.height - 1, (player.y + GraphicsConsts.defaultRenderDistance).ceil());
 
     for (int x = startX; x <= endX; x++) {
       for (int y = startY; y <= endY; y++) {
@@ -57,11 +53,11 @@ class WorldRenderer {
         final dy = y + 0.5 - player.y;
         final distance2D = sqrt(dx * dx + dy * dy);
 
-        if (distance2D > renderDistance) continue;
+        if (distance2D > GraphicsConsts.defaultRenderDistance) continue;
 
         final light = _calculateLight(distance2D);
 
-        for (int z = WorldMap.zMin; z <= WorldMap.zMax; z++) {
+        for (int z = GraphicsConsts.zMin; z <= GraphicsConsts.zMax; z++) {
           final blockId = _map.getBlockId(x, y, z);
           if (blockId == 0) continue;
 
@@ -180,7 +176,7 @@ class WorldRenderer {
     for (final (x, y, z) in corners) {
       final dx = x - player.x;
       final dy = y - player.y;
-      final dz = z - 1.5;
+      final dz = z - GraphicsConsts.playerHeight;
 
       final cosA = cos(player.angle);
       final sinA = sin(player.angle);
@@ -201,12 +197,13 @@ class WorldRenderer {
   }
 
   double _calculateLight(double distance) {
-    if (distance < fogStartDistance) {
+    if (distance < GraphicsConsts.fogStartDistance) {
       return 1.0;
-    } else if (distance >= fogEndDistance) {
+    } else if (distance >= GraphicsConsts.fogEndDistance) {
       return 0.2;
     } else {
-      final t = (distance - fogStartDistance) / (fogEndDistance - fogStartDistance);
+      final t = (distance - GraphicsConsts.fogStartDistance) /
+          (GraphicsConsts.fogEndDistance - GraphicsConsts.fogStartDistance);
       return 1.0 - t * 0.8;
     }
   }

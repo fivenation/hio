@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:hio/graphics/core/constants.dart';
 import 'models/world_map.dart';
 
 class WorldLoader {
@@ -12,15 +13,13 @@ class WorldLoader {
   }
   
   static WorldMap _parseWorldMap(Map<String, dynamic> json) {
-    final version = json['version'] as int;
     final width = json['width'] as int;
     final height = json['height'] as int;
     final zMin = json['zMin'] as int;
     final zMax = json['zMax'] as int;
     
-    // Проверка соответствия константам
-    if (zMin != WorldMap.zMin || zMax != WorldMap.zMax) {
-      throw Exception('Map Z range ($zMin..$zMax) does not match world constants (${WorldMap.zMin}..${WorldMap.zMax})');
+    if (zMin != GraphicsConsts.zMin || zMax != GraphicsConsts.zMax) {
+      throw Exception('Map Z range ($zMin..$zMax) does not match world constants (${GraphicsConsts.zMin}..${GraphicsConsts.zMax})');
     }
     
     final world = WorldMap(width: width, height: height);
