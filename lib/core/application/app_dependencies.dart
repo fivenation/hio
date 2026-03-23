@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hio/core/resources/resource_manager.dart';
+import 'package:hio/features/settings/settings_cubit.dart';
 import 'package:provider/provider.dart';
 
 class AppDependencies extends StatelessWidget {
   final Widget child;
-  
+
   const AppDependencies({required this.child, super.key});
 
   @override
@@ -14,6 +16,9 @@ class AppDependencies extends StatelessWidget {
         Provider<ResourcesManager>(
           create: (_) => ResourcesManager(),
           lazy: false,
+        ),
+        BlocProvider(
+          create: (_) => SettingsCubit()..loadSettings(),
         ),
       ],
       child: child,

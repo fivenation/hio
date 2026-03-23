@@ -5,6 +5,8 @@
 
 #include "resource.h"
 
+extern void ProcessRawInput(LPARAM lParam); 
+
 namespace {
 
 /// Window attribute that enables dark mode window decorations.
@@ -179,6 +181,11 @@ Win32Window::MessageHandler(HWND hwnd,
                             WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
+    case WM_INPUT: {
+      ProcessRawInput(lparam);
+      return 0;
+    }
+
     case WM_DESTROY:
       window_handle_ = nullptr;
       Destroy();
