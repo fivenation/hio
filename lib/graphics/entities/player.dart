@@ -70,12 +70,12 @@ class Player {
       moveY -= sin(angle);
     }
     if (_strafeLeft) {
-      moveX += cos(angle + pi / 2);
-      moveY += sin(angle + pi / 2);
-    }
-    if (_strafeRight) {
       moveX += cos(angle - pi / 2);
       moveY += sin(angle - pi / 2);
+    }
+    if (_strafeRight) {
+      moveX += cos(angle + pi / 2);
+      moveY += sin(angle + pi / 2);
     }
 
     if (moveX != 0 || moveY != 0) {

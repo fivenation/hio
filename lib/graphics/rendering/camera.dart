@@ -31,27 +31,39 @@ class ProjectionCamera {
   }
 
   Offset? worldToScreen(double x, double y, double z, Player player) {
-  double dx = x - player.x;
-  double dy = y - player.y;
-  double dz = z - playerHeight;
+    // Вектор от игрока до точки
+    double dx = x - player.x;
+    double dy = y - player.y;
+    double dz = z - playerHeight;
 
-  double cosA = cos(player.angle);
-  double sinA = sin(player.angle);
+    // Поворачиваем координаты в систему камеры
+    double cosA = cos(player.angle);
+    double sinA = sin(player.angle);
 
-  double rotatedX = dx * sinA - dy * cosA;
-  double rotatedY = -(dx * cosA + dy * sinA);
+    // Глубина (вперед от камеры) - это projection на направление взгляда
+    double forward = dx * cosA + dy * sinA;
 
-  if (rotatedY <= 0.1) {
-    return null;
+    // Горизонтальное смещение (вправо от камеры) - перпендикуляр
+    double right = -dx * sinA + dy * cosA;
+
+    // Вертикальное смещение
+    double vertical = dz;
+
+    // Точки сзади камеры не рисуем
+    if (forward <= 0.1) {
+      return null;
+    }
+
+    // Перспективная проекция
+    double scale = screenWidth / 2 / tan(horizontalFovRad / 2);
+
+    // Экранируем с учетом pitch камеры
+    double screenX = screenWidth / 2 + (right / forward) * scale;
+    double screenY =
+        horizonY - (vertical / forward) * scale + tan(player.pitch) * scale;
+
+    return Offset(screenX, screenY);
   }
-
-  double scale = screenWidth / 2 / tan(horizontalFovRad / 2);
-  double screenX = screenWidth / 2 + rotatedX / rotatedY * scale;
-  double screenY =
-      horizonY - (dz / rotatedY) * scale + tan(player.pitch) * scale;
-
-  return Offset(screenX, screenY);
-}
 
   List<Offset> projectPoints(
       List<(double, double, double)> points, Player player) {

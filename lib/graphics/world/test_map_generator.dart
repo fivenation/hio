@@ -27,20 +27,25 @@ class TestMapGenerator {
       }
     }
 
-    final centerX = roomStart + roomSize ~/ 2;
-    final centerY = roomStart + roomSize ~/ 2;
+    const centerX = roomStart + roomSize ~/ 2;
+    const centerY = roomStart + roomSize ~/ 2;
 
+    // Теперь цвета соответствуют системе координат:
+    // Север (+Y) - синий
     world.setBlockId(
-        centerX, roomStart, 1, 10); // roomStart = минимальный Y = север
+        centerX, roomStart, 1, 10);
 
+    // Юг (-Y) - красный
     world.setBlockId(
-        centerX, roomEnd - 1, 1, 11); // roomEnd-1 = максимальный Y = юг
+        centerX, roomEnd - 1, 1, 11);
 
+    // Восток (+X) - зеленый
     world.setBlockId(
-        roomEnd - 1, centerY, 1, 12); // roomEnd-1 = максимальный X = восток
+        roomEnd - 1, centerY, 1, 12);
 
+    // Запад (-X) - желтый
     world.setBlockId(
-        roomStart, centerY, 1, 13); // roomStart = минимальный X = запад
+        roomStart, centerY, 1, 13); 
 
     // ========== ПОЛ И ПОТОЛОК ==========
     // Пол на Z = -1 (серый)
@@ -65,14 +70,11 @@ class TestMapGenerator {
     final blockAtPlayer = world.getBlockId(playerX, playerY, 0);
     print('Block at player spawn: ${blockAtPlayer == 0 ? "EMPTY" : "BLOCK"}');
 
-    print('=== MAP READY ===');
-    print('Player spawn at ($playerX, $playerY, 0)');
-    print('');
     print('COLOR LEGEND:');
-    print('  🔵 BLUE   = NORTH (N) - look for BLUE on the north wall');
-    print('  🔴 RED    = SOUTH (S) - look for RED on the south wall');
-    print('  🟢 GREEN  = EAST  (E) - look for GREEN on the east wall');
-    print('  🟡 YELLOW = WEST  (W) - look for YELLOW on the west wall');
+    print('  🔵 BLUE   = NORTH (+Y) - look for BLUE on the north wall');
+    print('  🔴 RED    = SOUTH (-Y) - look for RED on the south wall');
+    print('  🟢 GREEN  = EAST  (+X) - look for GREEN on the east wall');
+    print('  🟡 YELLOW = WEST  (-X) - look for YELLOW on the west wall');
 
     return world;
   }

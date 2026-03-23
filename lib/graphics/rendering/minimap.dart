@@ -59,9 +59,9 @@ class Minimap {
       playerPaint,
     );
 
-    // Направление взгляда (одна правильная линия)
     final dirX = playerX + cos(player.angle) * cellSize * 4;
-    final dirY = playerY - sin(player.angle) * cellSize * 4; // минус для Y
+    final dirY =
+        playerY + sin(player.angle) * cellSize * 4; // плюс вместо минуса!
 
     final dirPaint = Paint()
       ..color = const Color(0xFFFFFF00)
@@ -72,11 +72,22 @@ class Minimap {
       dirPaint,
     );
 
-// Текст с углом для отладки
+// Текст с углом и направлением
     final angleDeg = (player.angle * 180 / pi).toStringAsFixed(0);
+    String direction;
+// Исправляем направления для миникарты
+    if (player.angle >= -pi / 4 && player.angle < pi / 4)
+      direction = "E";
+    else if (player.angle >= pi / 4 && player.angle < 3 * pi / 4)
+      direction = "N";
+    else if (player.angle >= 3 * pi / 4 || player.angle < -3 * pi / 4)
+      direction = "W";
+    else
+      direction = "S";
+
     final textPainter = TextPainter(
       text: TextSpan(
-        text: 'Angle: $angleDeg°',
+        text: 'Angle: $angleDeg° ($direction)',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 10,

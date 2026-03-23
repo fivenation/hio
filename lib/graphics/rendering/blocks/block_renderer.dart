@@ -135,12 +135,12 @@ class BlockRenderer {
     Player player,
     double light,
   ) {
-    // Вычисляем среднюю глубину грани (Z в пространстве камеры)
-    double totalDepth = 0.0;
+    // Вычисляем среднюю глубину грани (вперед от камеры)
+    double totalForward = 0.0;
     int validPoints = 0;
 
     for (final (x, y, z) in corners) {
-      // Преобразуем мировые координаты в пространство камеры
+      // Вектор от игрока до точки
       final dx = x - player.x;
       final dy = y - player.y;
       final dz = z - 1.5; // высота игрока
@@ -148,15 +148,15 @@ class BlockRenderer {
       final cosA = cos(player.angle);
       final sinA = sin(player.angle);
 
-      // Глубина в пространстве камеры - это rotatedY
-      final depth = dx * cosA + dy * sinA;
+      // Глубина в пространстве камеры - это forward
+      final forward = dx * cosA + dy * sinA;
 
-      totalDepth += depth;
+      totalForward += forward;
       validPoints++;
     }
 
     if (validPoints > 0) {
-      final avgDepth = totalDepth / validPoints;
+      final avgForward = totalForward / validPoints;
 
       _facesToRender.add(_RenderFace(
         corners: corners,
@@ -166,7 +166,7 @@ class BlockRenderer {
           (color.green * light).toInt().clamp(0, 255),
           (color.blue * light).toInt().clamp(0, 255),
         ),
-        depth: avgDepth,
+        depth: avgForward, // глубина - это forward расстояние
       ));
     }
   }
