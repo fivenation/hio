@@ -1,6 +1,65 @@
-// lib/graphics/world/test_map_generator.dart
-import 'models/world_map.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:hio/graphics/core/constants.dart';
+import 'package:hio/graphics/world/models/world_map.dart';
 
+// Временная заглушка для PlayerData, так как его нет в graphics/world/models
+class PlayerData {
+  final double x;
+  final double y;
+  final double angle;
+
+  PlayerData({required this.x, required this.y, required this.angle});
+
+  Map<String, dynamic> toJson() => {
+        'x': x,
+        'y': y,
+        'angle': angle,
+      };
+}
+
+void main() {
+  // Генерируем карту
+  final world = TestMapGenerator.generateRoomMap();
+
+  // Создаём JSON структуру
+  final mapData = {
+    'name': 'room_2',
+    'displayName': 'Тестовая комната 2',
+    'width': world.width,
+    'height': world.height,
+    'player': PlayerData(x: 35.0, y: 35.0, angle: 3.14).toJson(),
+    'ambientLight': 1.0,
+    'lightSources': [],
+    'blocks': _exportBlocks(world),
+  };
+
+  // Сохраняем в файл
+  final jsonString = JsonEncoder.withIndent('  ').convert(mapData);
+  File('../../../resources/maps/room_2.json').writeAsStringSync(jsonString);
+
+  print('✅ Карта сохранена в assets/maps/room.json');
+  print('📊 Всего блоков: ${(mapData['blocks'] as Map).length}');
+}
+
+List<List<int>> _exportBlocks(WorldMap world) {
+  final blocks = <List<int>>[];
+
+  for (int x = 0; x < world.width; x++) {
+    for (int y = 0; y < world.height; y++) {
+      for (int z = GraphicsConsts.zMin; z <= GraphicsConsts.zMax; z++) {
+        final id = world.getBlockId(x, y, z);
+        if (id != 0) {
+          blocks.add([x, y, z, id]);
+        }
+      }
+    }
+  }
+
+  return blocks;
+}
+
+// Копируем твой генератор (можно импортировать, но для простоты копируем)
 class TestMapGenerator {
   static WorldMap generateRoomMap() {
     const width = 70;
@@ -30,51 +89,25 @@ class TestMapGenerator {
     const centerX = roomStart + roomSize ~/ 2;
     const centerY = roomStart + roomSize ~/ 2;
 
-    // Теперь цвета соответствуют системе координат:
-    // Север (+Y) - синий
-    world.setBlockId(
-        centerX, roomStart, 1, 10);
+    world.setBlockId(centerX, roomStart, 1, 10);
 
-    // Юг (-Y) - красный
-    world.setBlockId(
-        centerX, roomEnd - 1, 1, 11);
+    world.setBlockId(centerX, roomEnd - 1, 1, 11);
 
-    // Восток (+X) - зеленый
-    world.setBlockId(
-        roomEnd - 1, centerY, 1, 12);
+    world.setBlockId(roomEnd - 1, centerY, 1, 12);
 
-    // Запад (-X) - желтый
-    world.setBlockId(
-        roomStart, centerY, 1, 13); 
+    world.setBlockId(roomStart, centerY, 1, 13);
 
-    // ========== ПОЛ И ПОТОЛОК ==========
-    // Пол на Z = -1 (серый)
     for (int x = roomStart; x < roomEnd; x++) {
       for (int y = roomStart; y < roomEnd; y++) {
         world.setBlockId(x, y, -1, 1);
       }
     }
 
-    // Потолок на Z = 4 (серый)
     for (int x = roomStart; x < roomEnd; x++) {
       for (int y = roomStart; y < roomEnd; y++) {
         world.setBlockId(x, y, 4, 1);
       }
     }
-
-    // ========== ИГРОК В ЦЕНТРЕ ==========
-    final playerX = centerX;
-    final playerY = centerY;
-
-    // Проверяем, что игрок не в блоке
-    final blockAtPlayer = world.getBlockId(playerX, playerY, 0);
-    print('Block at player spawn: ${blockAtPlayer == 0 ? "EMPTY" : "BLOCK"}');
-
-    print('COLOR LEGEND:');
-    print('  🔵 BLUE   = NORTH (+Y) - look for BLUE on the north wall');
-    print('  🔴 RED    = SOUTH (-Y) - look for RED on the south wall');
-    print('  🟢 GREEN  = EAST  (+X) - look for GREEN on the east wall');
-    print('  🟡 YELLOW = WEST  (-X) - look for YELLOW on the west wall');
 
     return world;
   }

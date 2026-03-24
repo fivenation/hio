@@ -70,8 +70,8 @@ class Player {
     if (angle < 0) angle += 2 * pi;
 
     pitch += _pitchDelta * GraphicsConsts.playerPitchSpeed * dt;
-    if (pitch > pi / 2) pitch = pi / 2;
-    if (pitch < -pi / 2) pitch = -pi / 2;
+    if (pitch > 45 * pi / 180) pitch = 45 * pi / 180;
+    if (pitch < -45 * pi / 180) pitch = -45 * pi / 180;
 
     _rotateDelta = 0.0;
     _pitchDelta = 0.0;

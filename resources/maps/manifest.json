@@ -1,8 +1,12 @@
 {
-    "maps": [
-      {
-        "name": "room",
-        "displayName": "Тестовая комната"
-      }
-    ]
-  }
+  "maps": [
+    {
+      "name": "room",
+      "displayName": "Тестовая комната"
+    },
+    {
+      "name": "room_2",
+      "displayName": "Тестовая комната 2"
+    }
+  ]
+}
