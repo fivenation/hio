@@ -25,7 +25,7 @@ class SettingsModel with _$SettingsModel {
 
   factory SettingsModel.defaultSettings() {
     return SettingsModel(
-      mouseSensitivity: 0.04,
+      mouseSensitivity: 0.05,
       fullscreen: false,
       resolutionIndex: 5,
       keyBindings: KeyBindings.defaultBindings(),

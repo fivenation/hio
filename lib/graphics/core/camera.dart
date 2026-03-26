@@ -54,6 +54,9 @@ class ProjectionCamera {
       2 * atan(tan(verticalFovRad / 2) * aspectRatio);
 
   double get horizonY => screenHeight * 0.5;
+  
+  double get cachedCosA => _cachedCosA;
+  double get cachedSinA => _cachedSinA;
 
   double _cachedCosA = 0;
   double _cachedSinA = 0;

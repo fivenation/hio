@@ -141,13 +141,13 @@ class WorldRenderer {
   bool _isColumnVisible(int x, int y, Player player, double distance) {
     if (distance > renderDistance) return false;
 
-    final dx = x + 0.5 - player.x;
-    final dy = y + 0.5 - player.y;
+    final dx = x - player.x;
+    final dy = y - player.y;
     final angleToBlock = atan2(dy, dx);
     var angleDiff = (angleToBlock - player.angle).abs();
     if (angleDiff > pi) angleDiff = 2 * pi - angleDiff;
 
-    return angleDiff < pi / 2;
+    return angleDiff < pi;
   }
 
   double _calculateLight(double distance) {
@@ -184,6 +184,7 @@ class WorldRenderer {
       ((block.color.b * 255.0) * light).round().clamp(0, 255),
     );
 
+    // Проверка статической видимости (соседние блоки)
     final northAir = _isFaceVisible(x, y + 1, z);
     final southAir = _isFaceVisible(x, y - 1, z);
     final eastAir = _isFaceVisible(x + 1, y, z);
@@ -191,8 +192,26 @@ class WorldRenderer {
     final topAir = _isFaceVisible(x, y, z + 1);
     final bottomAir = _isFaceVisible(x, y, z - 1);
 
+    // Проверяем, насколько близко блок к игроку
+    final blockCenterX = x + 0.5;
+    final blockCenterY = y + 0.5;
+    final blockCenterZ = z + 0.5;
+
+    final dxToPlayer = blockCenterX - player.x;
+    final dyToPlayer = blockCenterY - player.y;
+    final dzToPlayer = blockCenterZ - GraphicsConsts.playerHeight;
+
+    final distance3D = sqrt(dxToPlayer * dxToPlayer +
+        dyToPlayer * dyToPlayer +
+        dzToPlayer * dzToPlayer);
+
+    // Блок очень близко к игроку (в радиусе 0.8 метра) — рисуем всегда
+    final isVeryClose = distance3D < 0.8;
+
+    // Северная грань (NORTH)
     if (northAir &&
-        _isFaceVisibleToCamera(x, y, z, FaceDirection.north, player)) {
+        (isVeryClose ||
+            _isFaceVisibleToCamera(x, y, z, FaceDirection.north, player))) {
       _addFace(
         [(x1, y2, z1), (x2, y2, z1), (x2, y2, z2), (x1, y2, z2)],
         colorWithLight,
@@ -200,8 +219,10 @@ class WorldRenderer {
       );
     }
 
+    // Южная грань (SOUTH)
     if (southAir &&
-        _isFaceVisibleToCamera(x, y, z, FaceDirection.south, player)) {
+        (isVeryClose ||
+            _isFaceVisibleToCamera(x, y, z, FaceDirection.south, player))) {
       _addFace(
         [(x1, y1, z1), (x1, y1, z2), (x2, y1, z2), (x2, y1, z1)],
         colorWithLight,
@@ -209,8 +230,10 @@ class WorldRenderer {
       );
     }
 
+    // Восточная грань (EAST)
     if (eastAir &&
-        _isFaceVisibleToCamera(x, y, z, FaceDirection.east, player)) {
+        (isVeryClose ||
+            _isFaceVisibleToCamera(x, y, z, FaceDirection.east, player))) {
       _addFace(
         [(x2, y1, z1), (x2, y2, z1), (x2, y2, z2), (x2, y1, z2)],
         colorWithLight,
@@ -218,8 +241,10 @@ class WorldRenderer {
       );
     }
 
+    // Западная грань (WEST)
     if (westAir &&
-        _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player)) {
+        (isVeryClose ||
+            _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player))) {
       _addFace(
         [(x1, y1, z1), (x1, y2, z1), (x1, y2, z2), (x1, y1, z2)],
         colorWithLight,
@@ -227,7 +252,10 @@ class WorldRenderer {
       );
     }
 
-    if (topAir && _isFaceVisibleToCamera(x, y, z, FaceDirection.top, player)) {
+    // Верхняя грань (TOP)
+    if (topAir &&
+        (isVeryClose ||
+            _isFaceVisibleToCamera(x, y, z, FaceDirection.top, player))) {
       _addFace(
         [(x1, y1, z2), (x2, y1, z2), (x2, y2, z2), (x1, y2, z2)],
         colorWithLight,
@@ -235,8 +263,10 @@ class WorldRenderer {
       );
     }
 
+    // Нижняя грань (BOTTOM)
     if (bottomAir &&
-        _isFaceVisibleToCamera(x, y, z, FaceDirection.bottom, player)) {
+        (isVeryClose ||
+            _isFaceVisibleToCamera(x, y, z, FaceDirection.bottom, player))) {
       _addFace(
         [(x1, y1, z1), (x1, y2, z1), (x2, y2, z1), (x2, y1, z1)],
         colorWithLight,
@@ -255,31 +285,14 @@ class WorldRenderer {
     final (cx, cy, cz) = _getFaceCenter(x, y, z, direction);
     final (nx, ny, nz) = _getFaceNormal(direction);
 
-    final viewX = cx - player.x;
-    final viewY = cy - player.y;
-    final viewZ = cz - GraphicsConsts.playerHeight;
+    final viewX = player.x - cx;
+    final viewY = player.y - cy;
+    final viewZ = GraphicsConsts.playerHeight - cz;
 
     final dot = nx * viewX + ny * viewY + nz * viewZ;
 
-    // Исправлено: грань видима, если нормаль направлена ОТ камеры
-    // то есть угол между нормалью и вектором на камеру > 90°
-    if (dot >= 0) return false;
-
-    final forward = viewX * cos(player.angle) + viewY * sin(player.angle);
-    if (forward <= 0.1) return false;
-
-    final right = -viewX * sin(player.angle) + viewY * cos(player.angle);
-    final vertical = viewZ;
-
-    final horizontalAngle = atan2(right, forward).abs();
-    const maxHorizontalAngle = pi / 2.2;
-    if (horizontalAngle > maxHorizontalAngle) return false;
-
-    final verticalAngle = atan2(vertical, forward) - player.pitch;
-    const maxVerticalAngle = GraphicsConsts.defaultVerticalFov * pi / 180 / 2;
-    if (verticalAngle.abs() > maxVerticalAngle + 0.2) return false;
-
-    return true;
+    // Грань видима, только если камера смотрит на лицевую сторону
+    return dot > 0;
   }
 
   (num, num, num) _getFaceCenter(int x, int y, int z, FaceDirection direction) {
