@@ -1,42 +1,3 @@
-/*
- * Модуль проекционной камеры для 3D-рендеринга.
- * 
- * ОСНОВНАЯ ЗАДАЧА:
- * Преобразование мировых координат (X, Y, Z) в экранные координаты (X, Y)
- * с использованием перспективной проекции.
- * 
- * МАТЕМАТИЧЕСКАЯ МОДЕЛЬ:
- * 
- * 1. СИСТЕМА КООРДИНАТ КАМЕРЫ
- *    - Игрок находится в точке (player.x, player.y) на высоте playerHeight
- *    - Направление взгляда определяется углом angle (горизонталь) и pitch (вертикаль)
- *    - Ось Z направлена вверх, Y - на север, X - на восток
- * 
- * 2. ПРЕОБРАЗОВАНИЕ В ПРОСТРАНСТВО КАМЕРЫ
- *    Вектор от игрока до точки: (dx, dy, dz) = (x - player.x, y - player.y, z - playerHeight)
- *    
- *    Поворот в систему камеры:
- *    - forward (глубина) = dx * cos(angle) + dy * sin(angle)
- *    - right (боковое смещение) = -dx * sin(angle) + dy * cos(angle)
- *    - vertical (вертикаль) = dz
- * 
- * 3. ПЕРСПЕКТИВНАЯ ПРОЕКЦИЯ
- *    scale = screenWidth / 2 / tan(horizontalFov / 2)
- *    
- *    screenX = screenWidth / 2 + (right / forward) * scale
- *    screenY = horizonY - (vertical / forward) * scale + tan(pitch) * scale
- * 
- * 4. ОПТИМИЗАЦИЯ (КЭШИРОВАНИЕ)
- *    - Все тригонометрические вычисления (cos, sin, tan) выполняются 1 раз за кадр
- *    - Метод updateCache() вызывается перед рендерингом
- *    - Кэшированные значения используются во всех worldToScreen вызовах
- * 
- * ПАРАМЕТРЫ:
- *    - verticalFovDegrees: вертикальное поле зрения в градусах (по умолчанию 60°)
- *    - horizonY: линия горизонта (центр экрана)
- *    - playerHeight: высота глаз игрока над полом (1.5 метра)
- */
-
 import 'dart:math';
 import 'dart:ui';
 import '../../graphics/entities/player.dart';
@@ -48,19 +9,12 @@ class ProjectionCamera {
   final double verticalFovDegrees;
   late final double verticalFovRad;
 
-  double get aspectRatio => _screenWidth / _screenHeight;
-  double get horizontalFovRad =>
-      2 * atan(tan(verticalFovRad / 2) * aspectRatio);
-  double get horizonY => _screenHeight * 0.5;
-  double get screenWidth => _screenWidth;
-  double get screenHeight => _screenHeight;
-  double get cachedCosA => _cachedCosA;
-  double get cachedSinA => _cachedSinA;
+  // Кэшированные векторы камеры
+  double _forwardX = 0, _forwardY = 0, _forwardZ = 0;
+  double _rightX = 0, _rightY = 0, _rightZ = 0;
+  double _upX = 0, _upY = 0, _upZ = 0;
 
-  double _cachedCosA = 0;
-  double _cachedSinA = 0;
-  double _cachedScale = 0;
-  double _cachedTanPitch = 0;
+  double _scale = 0;
   bool _cacheValid = false;
 
   ProjectionCamera({
@@ -72,6 +26,13 @@ class ProjectionCamera {
     verticalFovRad = verticalFovDegrees * pi / 180;
   }
 
+  double get aspectRatio => _screenWidth / _screenHeight;
+  double get horizontalFovRad =>
+      2 * atan(tan(verticalFovRad / 2) * aspectRatio);
+  double get horizonY => _screenHeight * 0.5;
+  double get screenWidth => _screenWidth;
+  double get screenHeight => _screenHeight;
+
   void resize(double width, double height) {
     _screenWidth = width;
     _screenHeight = height;
@@ -79,10 +40,32 @@ class ProjectionCamera {
   }
 
   void updateCache(Player player) {
-    _cachedCosA = cos(player.angle);
-    _cachedSinA = sin(player.angle);
-    _cachedScale = _screenWidth / 2 / tan(horizontalFovRad / 2);
-    _cachedTanPitch = tan(player.pitch);
+    final yaw = player.angle;
+    final pitch = player.pitch;
+
+    final cosYaw = cos(yaw);
+    final sinYaw = sin(yaw);
+    final cosPitch = cos(pitch);
+    final sinPitch = sin(pitch);
+
+    // Forward: куда смотрит камера
+    _forwardX = cosYaw * cosPitch;
+    _forwardY = sinYaw * cosPitch;
+    _forwardZ = sinPitch;
+
+    // Right: перпендикулярно forward в горизонтальной плоскости
+    // Соответствует исходной формуле right = (-sinθ, cosθ)
+    _rightX = -sinYaw;
+    _rightY = cosYaw;
+    _rightZ = 0.0;
+
+    // Up: cross(forward, right) — дает вектор, указывающий вверх относительно камеры
+    _upX = _forwardY * _rightZ - _forwardZ * _rightY;
+    _upY = _forwardZ * _rightX - _forwardX * _rightZ;
+    _upZ = _forwardX * _rightY - _forwardY * _rightX;
+
+    // Масштаб для перспективы
+    _scale = _screenWidth / 2 / tan(horizontalFovRad / 2);
     _cacheValid = true;
   }
 
@@ -95,17 +78,15 @@ class ProjectionCamera {
     final dy = y - player.y;
     final dz = z - GraphicsConsts.playerHeight;
 
-    final forward = dx * _cachedCosA + dy * _cachedSinA;
+    final forwardDepth = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
 
-    if (forward <= 0.1) return null;
+    if (forwardDepth <= 0.1) return null;
 
-    final right = -dx * _cachedSinA + dy * _cachedCosA;
-    final vertical = dz;
+    final rightOffset = dx * _rightX + dy * _rightY + dz * _rightZ;
+    final upOffset = dx * _upX + dy * _upY + dz * _upZ;
 
-    final screenX = _screenWidth / 2 + (right / forward) * _cachedScale;
-    final screenY = horizonY -
-        (vertical / forward) * _cachedScale +
-        _cachedTanPitch * _cachedScale;
+    final screenX = _screenWidth / 2 + (rightOffset / forwardDepth) * _scale;
+    final screenY = _screenHeight / 2 - (upOffset / forwardDepth) * _scale;
 
     return Offset(screenX, screenY);
   }
