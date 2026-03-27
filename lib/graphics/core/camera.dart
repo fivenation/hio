@@ -43,18 +43,17 @@ import '../../graphics/entities/player.dart';
 import '../core/constants.dart';
 
 class ProjectionCamera {
-  double screenWidth;
-  double screenHeight;
+  double _screenWidth;
+  double _screenHeight;
   final double verticalFovDegrees;
   late final double verticalFovRad;
 
-  double get aspectRatio => screenWidth / screenHeight;
-
+  double get aspectRatio => _screenWidth / _screenHeight;
   double get horizontalFovRad =>
       2 * atan(tan(verticalFovRad / 2) * aspectRatio);
-
-  double get horizonY => screenHeight * 0.5;
-  
+  double get horizonY => _screenHeight * 0.5;
+  double get screenWidth => _screenWidth;
+  double get screenHeight => _screenHeight;
   double get cachedCosA => _cachedCosA;
   double get cachedSinA => _cachedSinA;
 
@@ -65,23 +64,24 @@ class ProjectionCamera {
   bool _cacheValid = false;
 
   ProjectionCamera({
-    required this.screenWidth,
-    required this.screenHeight,
+    required double screenWidth,
+    required double screenHeight,
     this.verticalFovDegrees = GraphicsConsts.defaultVerticalFov,
-  }) {
+  })  : _screenWidth = screenWidth,
+        _screenHeight = screenHeight {
     verticalFovRad = verticalFovDegrees * pi / 180;
   }
 
   void resize(double width, double height) {
-    screenWidth = width;
-    screenHeight = height;
+    _screenWidth = width;
+    _screenHeight = height;
     _cacheValid = false;
   }
 
   void updateCache(Player player) {
     _cachedCosA = cos(player.angle);
     _cachedSinA = sin(player.angle);
-    _cachedScale = screenWidth / 2 / tan(horizontalFovRad / 2);
+    _cachedScale = _screenWidth / 2 / tan(horizontalFovRad / 2);
     _cachedTanPitch = tan(player.pitch);
     _cacheValid = true;
   }
@@ -102,7 +102,7 @@ class ProjectionCamera {
     final right = -dx * _cachedSinA + dy * _cachedCosA;
     final vertical = dz;
 
-    final screenX = screenWidth / 2 + (right / forward) * _cachedScale;
+    final screenX = _screenWidth / 2 + (right / forward) * _cachedScale;
     final screenY = horizonY -
         (vertical / forward) * _cachedScale +
         _cachedTanPitch * _cachedScale;

@@ -17,6 +17,7 @@ class GraphicsConsts {
   static const double fogEndDistance = 64.0;
   static const double defaultRenderDistance = 64.0;
   static const double defaultVerticalFov = 60.0;
+  static const double cameraDepth = 0.0;
 
   // Коллизии
   static const int collisionCheckZ = 0;
