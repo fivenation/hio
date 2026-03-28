@@ -1,12 +1,11 @@
-import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hio/features/settings/settings_cubit.dart';
-import 'package:hio/features/settings/tools/fps_counder.dart';
 import 'package:hio/features/input/game_controls.dart';
 import 'package:hio/features/input/input_manager.dart';
+import 'package:hio/features/settings/tools/fps_counder.dart';
 import 'package:hio/graphics/blocks/block_loader.dart';
 import 'package:hio/graphics/blocks/block_registry.dart';
 import 'package:hio/graphics/core/camera.dart';
@@ -133,7 +132,6 @@ class AppGraphics extends FlameGame
 
     _fpsCounter.update(DateTime.now().millisecondsSinceEpoch / 1000);
 
-    // Обновляем только если управление не заблокировано И приложение активно
     if (!_isInputLocked && !_isAppPaused) {
       _gameControls.update(dt);
       _world.update(dt);
@@ -147,7 +145,12 @@ class AppGraphics extends FlameGame
     _drawSky(canvas);
     _worldRenderer.render(canvas, _world);
 
-    // Мини-карта
+    _fpsCounter.updateMetrics(
+      facesCount: 0, //_worldRenderer.currentFacesCount,
+      shaderCacheSize: 0, //_worldRenderer.currentShaderCacheSize,
+      columnCacheSize: 0, //_worldRenderer.currentColumnCacheSize,
+    );
+
     canvas.save();
     canvas.translate(size.x - 210, 10);
     _minimap.render(canvas, _world);

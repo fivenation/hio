@@ -11,9 +11,6 @@ class InputManager {
   bool _hasMousePosition = false;
   late final MouseCaptureService _mouseCapture;
 
-  // Флаг для отложенного центрирования
-  bool _needsCenter = false;
-
   InputManager() {
     _mouseCapture = MouseCaptureService.create();
   }

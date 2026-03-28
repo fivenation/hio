@@ -372,7 +372,10 @@ class WorldRenderer {
 
     final dot = nx * viewX + ny * viewY + nz * viewZ;
 
-    return dot > 0;
+    final distance = sqrt(viewX * viewX + viewY * viewY + viewZ * viewZ);
+    final threshold = distance < 0.5 ? -0.3 : 0.0;
+
+    return dot > threshold;
   }
 
   (num, num, num) _getFaceCenter(int x, int y, int z, FaceDirection direction) {

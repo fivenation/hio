@@ -1,8 +1,9 @@
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'dart:ui';
 
-import 'texture_atlas.dart';
-import '../../core/rect_uv.dart';
+import 'package:flutter/material.dart';
+import 'package:hio/graphics/core/rect_uv.dart';
+import 'package:hio/graphics/rendering/textures/texture_atlas.dart';
 
 enum TextureLOD { high, medium, low, fog, none }
 
@@ -11,8 +12,10 @@ class TextureLODManager {
   static TextureLODManager get instance => _instance;
 
   final TextureAtlasManager _atlasManager = TextureAtlasManager.instance;
+
   final Map<int, Paint> _shaderCache = {};
-  bool _debugPrinted = false;
+
+  static const int _maxCacheSize = 500;
 
   TextureLODManager._internal();
 
@@ -52,6 +55,24 @@ class TextureLODManager {
 
     final textureRect = _atlasManager.getTextureRect(uv, textureSize);
     if (textureRect == null) return null;
+
+    // Генерируем ключ кэша
+    final cacheKey = Object.hash(
+      uv.left,
+      uv.top,
+      uv.right,
+      uv.bottom,
+      textureSize,
+      opacity,
+    );
+
+    if (_shaderCache.containsKey(cacheKey)) {
+      final cachedPaint = _shaderCache[cacheKey]!;
+      if (opacity < 1.0) {
+        cachedPaint.color = const Color(0xFFFFFFFF).withOpacity(opacity);
+      }
+      return cachedPaint;
+    }
 
     final uScale = 1 / textureSize;
     final vScale = 1 / textureSize;
@@ -93,12 +114,27 @@ class TextureLODManager {
     if (opacity < 1.0) {
       paint.color = const Color(0xFFFFFFFF).withOpacity(opacity);
     }
+// Сохраняем в кэш
+    _shaderCache[cacheKey] = paint;
+
+    _cleanupIfNeeded();
 
     return paint;
   }
 
+  void _cleanupIfNeeded() {
+    if (_shaderCache.length > _maxCacheSize) {
+      final keysToRemove =
+          _shaderCache.keys.take(_shaderCache.length ~/ 2).toList();
+      for (final key in keysToRemove) {
+        _shaderCache.remove(key);
+      }
+    }
+  }
+
   void clearCache() {
     _shaderCache.clear();
-    _debugPrinted = false;
   }
+
+  int getCacheSize() => _shaderCache.length;
 }

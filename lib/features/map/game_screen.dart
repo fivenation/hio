@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flame/game.dart';
 import 'package:hio/features/settings/model/settings_model.dart';
-import 'package:hio/features/settings/model/settings_state.dart';
 import 'package:hio/features/settings/settings_content.dart';
 import 'package:hio/features/settings/settings_cubit.dart';
 import 'package:hio/graphics/graphics.dart';
@@ -189,12 +188,6 @@ class _GameScreenState extends State<GameScreen> with WindowListener {
 
   @override
   void onWindowMinimize() {}
-
-  @override
-  void onWindowShow() {}
-
-  @override
-  void onWindowHide() {}
 
   @override
   void onWindowMoved() {}
