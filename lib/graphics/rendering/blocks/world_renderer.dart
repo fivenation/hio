@@ -1,19 +1,6 @@
 /*
  * Модуль отрисовки игрового мира.
- * 
- * ОСНОВНАЯ ЗАДАЧА:
- * Рендеринг всех видимых блоков в пределах радиуса обзора.
- * 
- * АЛГОРИТМ ОПРЕДЕЛЕНИЯ ВИДИМОСТИ ГРАНИ:
- * 
- * 1. Статическая проверка: соседний блок должен быть Air (или за границей карты)
- * 2. Back-face culling: грань должна быть повёрнута к камере
- *    - Вычисляем нормаль грани (вектор, указывающий наружу из блока)
- *    - Вычисляем вектор от камеры к центру грани
- *    - Если скалярное произведение > 0, грань смотрит на камеру
- * 3. Проверка попадания в поле зрения:
- *    - Горизонтальный угол не должен превышать половину FOV
- *    - Вертикальный угол (с учётом pitch) не должен превышать половину FOV
+ * Полная версия с поддержкой текстур и внутренних граней
  */
 
 import 'dart:math';
@@ -26,6 +13,7 @@ import 'package:hio/graphics/rendering/blocks/face_renderer.dart';
 import 'package:hio/graphics/world/game_world.dart';
 import 'package:hio/graphics/core/constants.dart';
 import 'package:hio/graphics/world/models/world_map.dart';
+import 'package:hio/graphics/core/rect_uv.dart';
 
 enum FaceDirection { north, south, east, west, top, bottom }
 
@@ -65,6 +53,17 @@ class WorldRenderer {
     _faceVisibilityCache.clear();
     _allFaces.clear();
 
+    // Определяем блок, в котором находится камера
+    final cameraBlockX = player.x.floor();
+    final cameraBlockY = player.y.floor();
+    final cameraBlockZ = player.z.floor();
+    final isCameraInsideBlock = _map.getBlockId(cameraBlockX, cameraBlockY, cameraBlockZ) != 0;
+    
+    // Если камера внутри блока, добавляем туман для плавного выхода
+    if (isCameraInsideBlock) {
+      _addFogEffect(canvas);
+    }
+
     final startX = max(0, (player.x - renderDistance).floor());
     final endX = min(_map.width - 1, (player.x + renderDistance).ceil());
     final startY = max(0, (player.y - renderDistance).floor());
@@ -84,7 +83,10 @@ class WorldRenderer {
           final blockDef = _blockRegistry.get(blockId);
           if (blockDef == null) continue;
 
-          _collectBlockFaces(x, y, z, blockDef, player, light);
+          _collectBlockFaces(
+            x, y, z, blockDef, player, light,
+            isCameraInsideBlock && x == cameraBlockX && y == cameraBlockY && z == cameraBlockZ,
+          );
         }
       }
     }
@@ -104,12 +106,29 @@ class WorldRenderer {
     for (int i = _bucketCount - 1; i >= 0; i--) {
       for (final face in _buckets[i]) {
         final screenPoints = _camera.projectPoints(face.corners, player);
-        if (screenPoints.length == 4) {
-          _faceRenderer.render(canvas, screenPoints, face.color, 1.0);
+        if (screenPoints.length >= 3) {
+          _faceRenderer.render(
+            canvas,
+            screenPoints,
+            face.color,
+            opacity: 1.0,
+            uv: face.uv,
+            isInsideBlock: face.isInsideBlock,
+          );
         }
       }
       _buckets[i].clear();
     }
+  }
+  
+  void _addFogEffect(Canvas canvas) {
+    final fogPaint = Paint()
+      ..color = const Color(0x44000000)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, _camera.screenWidth, _camera.screenHeight),
+      fogPaint,
+    );
   }
 
   _CachedColumnData _getCachedColumnData(int x, int y, Player player) {
@@ -147,7 +166,8 @@ class WorldRenderer {
     var angleDiff = (angleToBlock - player.angle).abs();
     if (angleDiff > pi) angleDiff = 2 * pi - angleDiff;
 
-    return angleDiff < pi;
+    final fovMultiplier = distance < 2.0 ? 1.5 : 1.0;
+    return angleDiff < pi * fovMultiplier;
   }
 
   double _calculateLight(double distance) {
@@ -156,8 +176,7 @@ class WorldRenderer {
     } else if (distance >= fogEndDistance) {
       return 0.2;
     } else {
-      final t =
-          (distance - fogStartDistance) / (fogEndDistance - fogStartDistance);
+      final t = (distance - fogStartDistance) / (fogEndDistance - fogStartDistance);
       return 1.0 - t * 0.8;
     }
   }
@@ -169,6 +188,7 @@ class WorldRenderer {
     BlockDefinition block,
     Player player,
     double light,
+    bool isCameraBlock,
   ) {
     final x1 = x.toDouble();
     final y1 = y.toDouble();
@@ -184,7 +204,13 @@ class WorldRenderer {
       ((block.color.b * 255.0) * light).round().clamp(0, 255),
     );
 
-    // Проверка статической видимости (соседние блоки)
+    // Для блока с камерой - рисуем ВСЕ грани с флагом isInsideBlock = true
+    if (isCameraBlock) {
+      _addAllFacesWithTextures(x1, y1, z1, x2, y2, z2, colorWithLight, player, block, true);
+      return;
+    }
+
+    // Проверка статической видимости
     final northAir = _isFaceVisible(x, y + 1, z);
     final southAir = _isFaceVisible(x, y - 1, z);
     final eastAir = _isFaceVisible(x + 1, y, z);
@@ -192,87 +218,107 @@ class WorldRenderer {
     final topAir = _isFaceVisible(x, y, z + 1);
     final bottomAir = _isFaceVisible(x, y, z - 1);
 
-    // Проверяем, насколько близко блок к игроку
     final blockCenterX = x + 0.5;
     final blockCenterY = y + 0.5;
     final blockCenterZ = z + 0.5;
 
     final dxToPlayer = blockCenterX - player.x;
     final dyToPlayer = blockCenterY - player.y;
-    final dzToPlayer = blockCenterZ - GraphicsConsts.playerHeight;
+    final dzToPlayer = blockCenterZ - player.z;
 
     final distance3D = sqrt(dxToPlayer * dxToPlayer +
         dyToPlayer * dyToPlayer +
         dzToPlayer * dzToPlayer);
 
-    // Блок очень близко к игроку (в радиусе 0.8 метра) — рисуем всегда
-    final isVeryClose = distance3D < 0.8;
+    final isVeryClose = distance3D < 0.5;
 
-    // Северная грань (NORTH)
-    if (northAir &&
-        (isVeryClose ||
-            _isFaceVisibleToCamera(x, y, z, FaceDirection.north, player))) {
-      _addFace(
+    // Получаем UV координаты для каждой грани
+    final textures = block.textures;
+    
+    // Северная грань (NORTH) - Y+
+    if (northAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.north, player))) {
+      _addFaceWithTexture(
         [(x1, y2, z1), (x2, y2, z1), (x2, y2, z2), (x1, y2, z2)],
         colorWithLight,
         player,
+        textures?.north,
+        false,
       );
     }
 
-    // Южная грань (SOUTH)
-    if (southAir &&
-        (isVeryClose ||
-            _isFaceVisibleToCamera(x, y, z, FaceDirection.south, player))) {
-      _addFace(
+    // Южная грань (SOUTH) - Y-
+    if (southAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.south, player))) {
+      _addFaceWithTexture(
         [(x1, y1, z1), (x1, y1, z2), (x2, y1, z2), (x2, y1, z1)],
         colorWithLight,
         player,
+        textures?.south,
+        false,
       );
     }
 
-    // Восточная грань (EAST)
-    if (eastAir &&
-        (isVeryClose ||
-            _isFaceVisibleToCamera(x, y, z, FaceDirection.east, player))) {
-      _addFace(
+    // Восточная грань (EAST) - X+
+    if (eastAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.east, player))) {
+      _addFaceWithTexture(
         [(x2, y1, z1), (x2, y2, z1), (x2, y2, z2), (x2, y1, z2)],
         colorWithLight,
         player,
+        textures?.east,
+        false,
       );
     }
 
-    // Западная грань (WEST)
-    if (westAir &&
-        (isVeryClose ||
-            _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player))) {
-      _addFace(
+    // Западная грань (WEST) - X-
+    if (westAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player))) {
+      _addFaceWithTexture(
         [(x1, y1, z1), (x1, y2, z1), (x1, y2, z2), (x1, y1, z2)],
         colorWithLight,
         player,
+        textures?.west,
+        false,
       );
     }
 
     // Верхняя грань (TOP)
-    if (topAir &&
-        (isVeryClose ||
-            _isFaceVisibleToCamera(x, y, z, FaceDirection.top, player))) {
-      _addFace(
+    if (topAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.top, player))) {
+      _addFaceWithTexture(
         [(x1, y1, z2), (x2, y1, z2), (x2, y2, z2), (x1, y2, z2)],
         colorWithLight,
         player,
+        textures?.top,
+        false,
       );
     }
 
     // Нижняя грань (BOTTOM)
-    if (bottomAir &&
-        (isVeryClose ||
-            _isFaceVisibleToCamera(x, y, z, FaceDirection.bottom, player))) {
-      _addFace(
+    if (bottomAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.bottom, player))) {
+      _addFaceWithTexture(
         [(x1, y1, z1), (x1, y2, z1), (x2, y2, z1), (x2, y1, z1)],
         colorWithLight,
         player,
+        textures?.bottom,
+        false,
       );
     }
+  }
+  
+  void _addAllFacesWithTextures(
+    double x1, double y1, double z1,
+    double x2, double y2, double z2,
+    Color color,
+    Player player,
+    BlockDefinition block,
+    bool isInsideBlock,
+  ) {
+    final textures = block.textures;
+    
+    // Рисуем все 6 граней с соответствующими текстурами
+    _addFaceWithTexture([(x1, y2, z1), (x2, y2, z1), (x2, y2, z2), (x1, y2, z2)], color, player, textures?.north, isInsideBlock);
+    _addFaceWithTexture([(x1, y1, z1), (x1, y1, z2), (x2, y1, z2), (x2, y1, z1)], color, player, textures?.south, isInsideBlock);
+    _addFaceWithTexture([(x2, y1, z1), (x2, y2, z1), (x2, y2, z2), (x2, y1, z2)], color, player, textures?.east, isInsideBlock);
+    _addFaceWithTexture([(x1, y1, z1), (x1, y2, z1), (x1, y2, z2), (x1, y1, z2)], color, player, textures?.west, isInsideBlock);
+    _addFaceWithTexture([(x1, y1, z2), (x2, y1, z2), (x2, y2, z2), (x1, y2, z2)], color, player, textures?.top, isInsideBlock);
+    _addFaceWithTexture([(x1, y1, z1), (x1, y2, z1), (x2, y2, z1), (x2, y1, z1)], color, player, textures?.bottom, isInsideBlock);
   }
 
   bool _isFaceVisibleToCamera(
@@ -287,12 +333,13 @@ class WorldRenderer {
 
     final viewX = player.x - cx;
     final viewY = player.y - cy;
-    final viewZ = GraphicsConsts.playerHeight - cz;
+    final viewZ = player.z - cz;
 
     final dot = nx * viewX + ny * viewY + nz * viewZ;
-
-    // Грань видима, только если камера смотрит на лицевую сторону
-    return dot > 0;
+    final distance = sqrt(viewX * viewX + viewY * viewY + viewZ * viewZ);
+    final threshold = distance < 0.5 ? -0.3 : 0.0;
+    
+    return dot > threshold;
   }
 
   (num, num, num) _getFaceCenter(int x, int y, int z, FaceDirection direction) {
@@ -362,6 +409,16 @@ class WorldRenderer {
     Color color,
     Player player,
   ) {
+    _addFaceWithTexture(corners, color, player, null, false);
+  }
+
+  void _addFaceWithTexture(
+    List<(double, double, double)> corners,
+    Color color,
+    Player player,
+    RectUV? uv,
+    bool isInsideBlock,
+  ) {
     double totalDepth = 0.0;
     int validPoints = 0;
     bool hasPointInFront = false;
@@ -372,11 +429,13 @@ class WorldRenderer {
     for (final (x, y, z) in corners) {
       final dx = x - player.x;
       final dy = y - player.y;
-      final dz = z - GraphicsConsts.playerHeight;
+      final dz = z - player.z;
 
       final depth = dx * cosA + dy * sinA;
+      
+      final threshold = sqrt(dx*dx + dy*dy + dz*dz) < 0.3 ? 0.01 : 0.1;
 
-      if (depth > 0.1) {
+      if (depth > threshold) {
         hasPointInFront = true;
       }
 
@@ -384,13 +443,27 @@ class WorldRenderer {
       validPoints++;
     }
 
-    if (!hasPointInFront) return;
+    if (!hasPointInFront) {
+      final isInsideAnyBlock = corners.any((p) {
+        final (cx, cy, cz) = p;
+        final blockX = cx.floor();
+        final blockY = cy.floor();
+        final blockZ = cz.floor();
+        return (blockX == player.x.floor() && 
+                blockY == player.y.floor() && 
+                blockZ == player.z.floor());
+      });
+      
+      if (!isInsideAnyBlock) return;
+    }
 
     if (validPoints > 0) {
       _allFaces.add(_RenderFace(
         corners: corners,
         color: color,
         depth: totalDepth / validPoints,
+        uv: uv,
+        isInsideBlock: isInsideBlock,
       ));
     }
   }
@@ -400,11 +473,15 @@ class _RenderFace {
   final List<(double, double, double)> corners;
   final Color color;
   final double depth;
+  final RectUV? uv;
+  final bool isInsideBlock;
 
   _RenderFace({
     required this.corners,
     required this.color,
     required this.depth,
+    this.uv,
+    this.isInsideBlock = false,
   });
 }
 

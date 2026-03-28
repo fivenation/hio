@@ -8,6 +8,9 @@ class ProjectionCamera {
   double _screenHeight;
   final double verticalFovDegrees;
   late final double verticalFovRad;
+  
+  // Минимальная глубина для проекции
+  static const double minDepth = 0.05;
 
   // Кэшированные векторы камеры
   double _forwardX = 0, _forwardY = 0, _forwardZ = 0;
@@ -54,12 +57,11 @@ class ProjectionCamera {
     _forwardZ = sinPitch;
 
     // Right: перпендикулярно forward в горизонтальной плоскости
-    // Соответствует исходной формуле right = (-sinθ, cosθ)
     _rightX = -sinYaw;
     _rightY = cosYaw;
     _rightZ = 0.0;
 
-    // Up: cross(forward, right) — дает вектор, указывающий вверх относительно камеры
+    // Up: cross(forward, right)
     _upX = _forwardY * _rightZ - _forwardZ * _rightY;
     _upY = _forwardZ * _rightX - _forwardX * _rightZ;
     _upZ = _forwardX * _rightY - _forwardY * _rightX;
@@ -76,17 +78,18 @@ class ProjectionCamera {
 
     final dx = x - player.x;
     final dy = y - player.y;
-    final dz = z - GraphicsConsts.playerHeight;
+    final dz = z - player.z;
 
     final forwardDepth = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
 
-    if (forwardDepth <= 0.1) return null;
+    // Используем минимальную глубину для проекции
+    final depth = max(forwardDepth, minDepth);
 
     final rightOffset = dx * _rightX + dy * _rightY + dz * _rightZ;
     final upOffset = dx * _upX + dy * _upY + dz * _upZ;
 
-    final screenX = _screenWidth / 2 + (rightOffset / forwardDepth) * _scale;
-    final screenY = _screenHeight / 2 - (upOffset / forwardDepth) * _scale;
+    final screenX = _screenWidth / 2 + (rightOffset / depth) * _scale;
+    final screenY = _screenHeight / 2 - (upOffset / depth) * _scale;
 
     return Offset(screenX, screenY);
   }
@@ -94,12 +97,42 @@ class ProjectionCamera {
   List<Offset> projectPoints(
       List<(double, double, double)> points, Player player) {
     final result = <Offset>[];
+    
+    // Если все точки имеют отрицательную глубину, пробуем экстраполировать
+    bool allBehind = true;
+    for (final (x, y, z) in points) {
+      final dx = x - player.x;
+      final dy = y - player.y;
+      final dz = z - player.z;
+      final forwardDepth = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
+      if (forwardDepth > minDepth) {
+        allBehind = false;
+        break;
+      }
+    }
+    
+    // Если все точки позади камеры, не рисуем
+    if (allBehind) return result;
+    
+    // Проецируем точки
     for (final (x, y, z) in points) {
       final offset = worldToScreen(x, y, z, player);
       if (offset != null) {
         result.add(offset);
       }
     }
+    
     return result;
+  }
+  
+  // Проверяет, находится ли точка перед камерой
+  bool isPointInFront(double x, double y, double z, Player player) {
+    if (!_cacheValid) updateCache(player);
+    
+    final dx = x - player.x;
+    final dy = y - player.y;
+    final dz = z - player.z;
+    
+    return dx * _forwardX + dy * _forwardY + dz * _forwardZ > minDepth;
   }
 }
