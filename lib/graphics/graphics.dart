@@ -146,9 +146,9 @@ class AppGraphics extends FlameGame
     _worldRenderer.render(canvas, _world);
 
     _fpsCounter.updateMetrics(
-      facesCount: 0, //_worldRenderer.currentFacesCount,
-      shaderCacheSize: 0, //_worldRenderer.currentShaderCacheSize,
-      columnCacheSize: 0, //_worldRenderer.currentColumnCacheSize,
+      facesCount: _worldRenderer.currentFacesCount,
+      shaderCacheSize: _worldRenderer.currentShaderCacheSize,
+      columnCacheSize: _worldRenderer.currentColumnCacheSize,
     );
 
     canvas.save();

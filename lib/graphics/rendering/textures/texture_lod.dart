@@ -80,22 +80,10 @@ class TextureLODManager {
     final rowIndex = (textureRect.top / textureRect.height);
 
     final matrix = Float64List.fromList([
-      uScale,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      vScale,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0,
-      -cellIndex,
-      -rowIndex,
-      0.0,
-      1.0,
+      uScale, 0.0, 0.0, 0.0, //
+      0.0, vScale, 0.0, 0.0, //
+      0.0, 0.0, 1.0, 0.0, //
+      -cellIndex, -rowIndex, 0.0, 1.0, //
     ]);
 
     final transform = Matrix4.fromFloat64List(matrix);
@@ -109,7 +97,7 @@ class TextureLODManager {
 
     final paint = Paint()
       ..shader = shader
-      ..filterQuality = FilterQuality.high;
+      ..filterQuality = FilterQuality.none;
 
     if (opacity < 1.0) {
       paint.color = const Color(0xFFFFFFFF).withOpacity(opacity);

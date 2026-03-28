@@ -8,17 +8,18 @@ class ProjectionCamera {
   double _screenHeight;
   final double verticalFovDegrees;
   late final double verticalFovRad;
-  
-  // Минимальная глубина для проекции
+
   static const double minDepth = 0.05;
 
-  // Кэшированные векторы камеры
   double _forwardX = 0, _forwardY = 0, _forwardZ = 0;
   double _rightX = 0, _rightY = 0, _rightZ = 0;
   double _upX = 0, _upY = 0, _upZ = 0;
 
   double _scale = 0;
   bool _cacheValid = false;
+
+  final Map<int, Offset> _projectionCache = {};
+  int _currentFrameId = 0;
 
   ProjectionCamera({
     required double screenWidth,
@@ -43,6 +44,10 @@ class ProjectionCamera {
   }
 
   void updateCache(Player player) {
+    _currentFrameId++;
+
+    _projectionCache.clear();
+
     final yaw = player.angle;
     final pitch = player.pitch;
 
@@ -51,12 +56,10 @@ class ProjectionCamera {
     final cosPitch = cos(pitch);
     final sinPitch = sin(pitch);
 
-    // Forward: куда смотрит камера
     _forwardX = cosYaw * cosPitch;
     _forwardY = sinYaw * cosPitch;
     _forwardZ = sinPitch;
 
-    // Right: перпендикулярно forward в горизонтальной плоскости
     _rightX = -sinYaw;
     _rightY = cosYaw;
     _rightZ = 0.0;
@@ -76,13 +79,23 @@ class ProjectionCamera {
       updateCache(player);
     }
 
+    final cacheKey = Object.hash(
+      (x * 100).round(),
+      (y * 100).round(),
+      (z * 100).round(),
+      _currentFrameId,
+    );
+
+    if (_projectionCache.containsKey(cacheKey)) {
+      return _projectionCache[cacheKey];
+    }
+
     final dx = x - player.x;
     final dy = y - player.y;
     final dz = z - player.z;
 
     final forwardDepth = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
 
-    // Используем минимальную глубину для проекции
     final depth = max(forwardDepth, minDepth);
 
     final rightOffset = dx * _rightX + dy * _rightY + dz * _rightZ;
@@ -91,10 +104,16 @@ class ProjectionCamera {
     final screenX = _screenWidth / 2 + (rightOffset / depth) * _scale;
     final screenY = _screenHeight / 2 - (upOffset / depth) * _scale;
 
-    return Offset(screenX, screenY);
+    final result = Offset(screenX, screenY);
+
+    // Сохраняем в кэш
+    _projectionCache[cacheKey] = result;
+
+    return result;
   }
 
-  List<Offset> projectPoints(List<(double, double, double)> points, Player player) {
+  List<Offset> projectPoints(
+      List<(double, double, double)> points, Player player) {
     final result = <Offset>[];
     for (final (x, y, z) in points) {
       final screenPoint = worldToScreen(x, y, z, player);
@@ -104,15 +123,19 @@ class ProjectionCamera {
     }
     return result;
   }
-  
-  // Проверяет, находится ли точка перед камерой
+
   bool isPointInFront(double x, double y, double z, Player player) {
     if (!_cacheValid) updateCache(player);
-    
+
     final dx = x - player.x;
     final dy = y - player.y;
     final dz = z - player.z;
-    
+
     return dx * _forwardX + dy * _forwardY + dz * _forwardZ > minDepth;
+  }
+
+  void clearCache() {
+    _projectionCache.clear();
+    _currentFrameId = 0;
   }
 }

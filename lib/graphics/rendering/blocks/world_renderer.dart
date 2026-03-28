@@ -28,6 +28,12 @@ class WorldRenderer {
   final List<List<_RenderFace>> _buckets =
       List.generate(_bucketCount, (_) => []);
   double _maxDepth = 0;
+  int _frameCounter = 0;
+  static const int _cleanupInterval = 300;
+
+  int get currentFacesCount => _allFaces.length;
+  int get currentShaderCacheSize => _lodManager.getCacheSize();
+  int get currentColumnCacheSize => _columnCache.length;
 
   WorldRenderer({
     required ProjectionCamera camera,
@@ -86,6 +92,12 @@ class WorldRenderer {
           );
         }
       }
+    }
+
+    _frameCounter++;
+    if (_frameCounter >= _cleanupInterval) {
+      _cleanupCaches();
+      _frameCounter = 0;
     }
 
     _maxDepth = 0;
@@ -417,6 +429,15 @@ class WorldRenderer {
       return true;
     }
     return _map.getBlockId(nx, ny, nz) == 0;
+  }
+
+  void _cleanupCaches() {
+    if (_columnCache.length > 5000) {
+      _columnCache.clear();
+    }
+    _lodManager.clearCache();
+    _camera.clearCache();
+    _faceRenderer.clearCache();
   }
 
   void clearCache() {
