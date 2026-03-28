@@ -4,7 +4,7 @@ import '../../core/rect_uv.dart';
 
 class FaceRenderer {
   final TextureLODManager _lodManager = TextureLODManager.instance;
-  
+
   void render(
     Canvas canvas,
     List<Offset> points,
@@ -14,13 +14,10 @@ class FaceRenderer {
     double distance = 0.0,
     bool isInsideBlock = false,
   }) {
-    if (points.length < 3) return;
-    
-    final path = Path();
-    path.addPolygon(points, true);
-    
+    if (points.length < 4) return;
+
     Paint paint;
-    
+
     if (uv != null) {
       final texturePaint = _lodManager.getTexturePaint(
         uv: uv,
@@ -28,23 +25,47 @@ class FaceRenderer {
         opacity: opacity,
         isInsideBlock: isInsideBlock,
       );
-      
-      if (texturePaint != null) {
+
+      if (texturePaint != null && texturePaint.shader != null) {
         paint = texturePaint;
-      } else {
-        paint = Paint()
-          ..color = color.withOpacity(opacity)
-          ..style = PaintingStyle.fill;
+
+        final positions = [
+          points[0],
+          points[1],
+          points[2],
+          points[3],
+        ];
+
+        final texCoords = [
+          const Offset(0.0, 1.0),
+          const Offset(1.0, 1.0),
+          const Offset(1.0, 0.0),
+          const Offset(0.0, 0.0),
+        ];
+
+        final indices = [0, 1, 2, 0, 2, 3];
+
+        final vertices = Vertices(
+          VertexMode.triangles,
+          positions,
+          textureCoordinates: texCoords,
+          indices: indices,
+        );
+
+        canvas.drawVertices(vertices, BlendMode.srcOver, paint);
+        return;
       }
-    } else {
-      paint = Paint()
-        ..color = color.withOpacity(opacity)
-        ..style = PaintingStyle.fill;
     }
-    
+
+    paint = Paint()
+      ..color = color.withOpacity(opacity)
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.addPolygon(points, true);
     canvas.drawPath(path, paint);
   }
-  
+
   void clearCache() {
     _lodManager.clearCache();
   }

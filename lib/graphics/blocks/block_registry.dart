@@ -22,38 +22,13 @@ class BlockRegistry {
     return _blocks[id];
   }
 
-  // В методе registerDefaultBlocks добавьте:
   void registerDefaultBlocks() {
-    // Тестовый блок с явными UV координатами
     register(BlockDefinition(
-      id: 1,
-      name: 'Test Block',
+      id: 7,
+      name: 'test_texture',
       isSolid: true,
-      textures: BlockTextures(
-        top: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-        bottom: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-        north: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-        south: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-        east: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-        west: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-      ),
-      color: Colors.grey,
-    ));
-
-    // Блок травы (для примера)
-    register(BlockDefinition(
-      id: 2,
-      name: 'Grass',
-      isSolid: true,
-      textures: BlockTextures(
-        top: const RectUV(0.0, 0.0, 0.0625, 0.0625),
-        bottom: const RectUV(0.0625, 0.0, 0.125, 0.0625),
-        north: const RectUV(0.125, 0.0, 0.1875, 0.0625),
-        south: const RectUV(0.125, 0.0, 0.1875, 0.0625),
-        east: const RectUV(0.125, 0.0, 0.1875, 0.0625),
-        west: const RectUV(0.125, 0.0, 0.1875, 0.0625),
-      ),
-      color: Colors.green,
+      textures: BlockTextures.uniform(const RectUV(0.9375, 0.9375, 1.0, 1.0)),
+      color: Colors.white,
     ));
   }
 

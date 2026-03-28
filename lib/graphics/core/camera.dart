@@ -94,34 +94,14 @@ class ProjectionCamera {
     return Offset(screenX, screenY);
   }
 
-  List<Offset> projectPoints(
-      List<(double, double, double)> points, Player player) {
+  List<Offset> projectPoints(List<(double, double, double)> points, Player player) {
     final result = <Offset>[];
-    
-    // Если все точки имеют отрицательную глубину, пробуем экстраполировать
-    bool allBehind = true;
     for (final (x, y, z) in points) {
-      final dx = x - player.x;
-      final dy = y - player.y;
-      final dz = z - player.z;
-      final forwardDepth = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
-      if (forwardDepth > minDepth) {
-        allBehind = false;
-        break;
+      final screenPoint = worldToScreen(x, y, z, player);
+      if (screenPoint != null) {
+        result.add(screenPoint);
       }
     }
-    
-    // Если все точки позади камеры, не рисуем
-    if (allBehind) return result;
-    
-    // Проецируем точки
-    for (final (x, y, z) in points) {
-      final offset = worldToScreen(x, y, z, player);
-      if (offset != null) {
-        result.add(offset);
-      }
-    }
-    
     return result;
   }
   

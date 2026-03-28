@@ -108,7 +108,6 @@ class WorldRenderer {
             canvas,
             screenPoints,
             face.color,
-            opacity: 1.0,
             uv: face.uv,
             distance: face.distance,
             isInsideBlock: face.isInsideBlock,
@@ -190,14 +189,12 @@ class WorldRenderer {
     final y2 = y + 1.0;
     final z2 = z + 1.0;
 
-    final Color colorWithLight = block.hasTextures
-        ? Colors.white.withOpacity(light)
-        : Color.fromARGB(
-            255,
-            ((block.color.r * 255.0) * light).round().clamp(0, 255),
-            ((block.color.g * 255.0) * light).round().clamp(0, 255),
-            ((block.color.b * 255.0) * light).round().clamp(0, 255),
-          );
+    final Color faceColor;
+    if (block.hasTextures) {
+      faceColor = Colors.white;
+    } else {
+      faceColor = block.color;
+    }
 
     final northAir = _isFaceVisible(x, y + 1, z);
     final southAir = _isFaceVisible(x, y - 1, z);
@@ -208,10 +205,15 @@ class WorldRenderer {
 
     final isVeryClose = distance3D < 0.5;
 
-    if (isCameraBlock || (northAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.north, player)))) {
+    // Север
+    if (isCameraBlock ||
+        (northAir &&
+            (isVeryClose ||
+                _isFaceVisibleToCamera(
+                    x, y, z, FaceDirection.north, player)))) {
       _addFace(
         [(x1, y2, z1), (x2, y2, z1), (x2, y2, z2), (x1, y2, z2)],
-        colorWithLight,
+        faceColor,
         player,
         block.textures?.north,
         distance3D,
@@ -219,10 +221,15 @@ class WorldRenderer {
       );
     }
 
-    if (isCameraBlock || (southAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.south, player)))) {
+    // Юг
+    if (isCameraBlock ||
+        (southAir &&
+            (isVeryClose ||
+                _isFaceVisibleToCamera(
+                    x, y, z, FaceDirection.south, player)))) {
       _addFace(
         [(x1, y1, z1), (x1, y1, z2), (x2, y1, z2), (x2, y1, z1)],
-        colorWithLight,
+        faceColor,
         player,
         block.textures?.south,
         distance3D,
@@ -230,10 +237,14 @@ class WorldRenderer {
       );
     }
 
-    if (isCameraBlock || (eastAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.east, player)))) {
+    // Восток
+    if (isCameraBlock ||
+        (eastAir &&
+            (isVeryClose ||
+                _isFaceVisibleToCamera(x, y, z, FaceDirection.east, player)))) {
       _addFace(
         [(x2, y1, z1), (x2, y2, z1), (x2, y2, z2), (x2, y1, z2)],
-        colorWithLight,
+        faceColor,
         player,
         block.textures?.east,
         distance3D,
@@ -241,10 +252,14 @@ class WorldRenderer {
       );
     }
 
-    if (isCameraBlock || (westAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player)))) {
+    // Запад
+    if (isCameraBlock ||
+        (westAir &&
+            (isVeryClose ||
+                _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player)))) {
       _addFace(
         [(x1, y1, z1), (x1, y2, z1), (x1, y2, z2), (x1, y1, z2)],
-        colorWithLight,
+        faceColor,
         player,
         block.textures?.west,
         distance3D,
@@ -252,10 +267,14 @@ class WorldRenderer {
       );
     }
 
-    if (isCameraBlock || (topAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.top, player)))) {
+    // Верх
+    if (isCameraBlock ||
+        (topAir &&
+            (isVeryClose ||
+                _isFaceVisibleToCamera(x, y, z, FaceDirection.top, player)))) {
       _addFace(
         [(x1, y1, z2), (x2, y1, z2), (x2, y2, z2), (x1, y2, z2)],
-        colorWithLight,
+        faceColor,
         player,
         block.textures?.top,
         distance3D,
@@ -263,10 +282,15 @@ class WorldRenderer {
       );
     }
 
-    if (isCameraBlock || (bottomAir && (isVeryClose || _isFaceVisibleToCamera(x, y, z, FaceDirection.bottom, player)))) {
+    // Низ
+    if (isCameraBlock ||
+        (bottomAir &&
+            (isVeryClose ||
+                _isFaceVisibleToCamera(
+                    x, y, z, FaceDirection.bottom, player)))) {
       _addFace(
         [(x1, y1, z1), (x1, y2, z1), (x2, y2, z1), (x2, y1, z1)],
-        colorWithLight,
+        faceColor,
         player,
         block.textures?.bottom,
         distance3D,
