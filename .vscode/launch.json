@@ -10,6 +10,23 @@
                 "-d",
                 "windows"
             ]
+        },
+        {
+            "name": "Run (Windows) - Profile with Performance Overlay",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "-d",
+                "windows",
+                "--profile",
+                "--enable-impeller",
+                "--trace-skia",
+                "--dart-define=FLUTTER_PERFORMANCE_OVERLAY=true"
+            ],
+            "env": {
+                "FLUTTER_GPU_PREFERENCE": "high_performance"
+            }
         }
     ]
 }

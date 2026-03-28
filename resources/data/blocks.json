@@ -1,0 +1,60 @@
+{
+    "blocks": [
+        {
+            "id": 1,
+            "name": "stone",
+            "isSolid": true,
+            "color": "FF808080",
+            "textures": {
+                "all": [
+                    0.0625,
+                    0.0,
+                    0.125,
+                    0.0625
+                ]
+            }
+        },
+        {
+            "id": 2,
+            "name": "wood",
+            "isSolid": true,
+            "color": "FF8B4513",
+            "textures": {
+                "all": [
+                    0.0625,
+                    0.0,
+                    0.125,
+                    0.0625
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "name": "north_marker",
+            "isSolid": true,
+            "color": "FF0000FF",
+            "textures": null
+        },
+        {
+            "id": 4,
+            "name": "south_marker",
+            "isSolid": true,
+            "color": "FFFF0000",
+            "textures": null
+        },
+        {
+            "id": 5,
+            "name": "east_marker",
+            "isSolid": true,
+            "color": "FF00FF00",
+            "textures": null
+        },
+        {
+            "id": 6,
+            "name": "west_marker",
+            "isSolid": true,
+            "color": "FFFFFF00",
+            "textures": null
+        }
+    ]
+}

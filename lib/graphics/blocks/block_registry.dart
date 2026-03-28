@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
 import 'package:hio/graphics/blocks/models/block_defenition.dart';
 
 import 'models/block_textures.dart';
@@ -21,64 +22,39 @@ class BlockRegistry {
     return _blocks[id];
   }
 
+  // В методе registerDefaultBlocks добавьте:
   void registerDefaultBlocks() {
-    // Блок для СЕВЕРА (синий)
-    final northBlock = BlockDefinition(
-      id: 10,
-      name: 'north_marker',
-      isSolid: true,
-      textures: null,
-      color: const Color(0xFF0000FF), // синий
-    );
-    register(northBlock);
-
-// Блок для ЮГА (красный)
-    final southBlock = BlockDefinition(
-      id: 11,
-      name: 'south_marker',
-      isSolid: true,
-      textures: null,
-      color: const Color(0xFFFF0000), // красный
-    );
-    register(southBlock);
-
-// Блок для ВОСТОКА (зеленый)
-    final eastBlock = BlockDefinition(
-      id: 12,
-      name: 'east_marker',
-      isSolid: true,
-      textures: null,
-      color: const Color(0xFF00FF00), // зеленый
-    );
-    register(eastBlock);
-
-// Блок для ЗАПАДА (желтый)
-    final westBlock = BlockDefinition(
-      id: 13,
-      name: 'west_marker',
-      isSolid: true,
-      textures: null,
-      color: const Color(0xFFFFFF00), // желтый
-    );
-    register(westBlock);
-
-    const stone = BlockDefinition(
+    // Тестовый блок с явными UV координатами
+    register(BlockDefinition(
       id: 1,
-      name: 'stone',
+      name: 'Test Block',
       isSolid: true,
-      textures: null,
-      color: Color(0xFF808080),
-    );
-    register(stone);
+      textures: BlockTextures(
+        top: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+        bottom: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+        north: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+        south: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+        east: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+        west: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+      ),
+      color: Colors.grey,
+    ));
 
-    const wood = BlockDefinition(
+    // Блок травы (для примера)
+    register(BlockDefinition(
       id: 2,
-      name: 'wood',
+      name: 'Grass',
       isSolid: true,
-      textures: null,
-      color: Color(0xFF8B4513),
-    );
-    register(wood);
+      textures: BlockTextures(
+        top: const RectUV(0.0, 0.0, 0.0625, 0.0625),
+        bottom: const RectUV(0.0625, 0.0, 0.125, 0.0625),
+        north: const RectUV(0.125, 0.0, 0.1875, 0.0625),
+        south: const RectUV(0.125, 0.0, 0.1875, 0.0625),
+        east: const RectUV(0.125, 0.0, 0.1875, 0.0625),
+        west: const RectUV(0.125, 0.0, 0.1875, 0.0625),
+      ),
+      color: Colors.green,
+    ));
   }
 
   bool has(int id) {

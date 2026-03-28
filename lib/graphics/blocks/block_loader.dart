@@ -1,59 +1,83 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:hio/core/resources/paths.dart';
 import 'package:hio/graphics/blocks/models/block_defenition.dart';
 import 'models/block_textures.dart';
 import 'block_registry.dart';
 import '../core/rect_uv.dart';
 
-/// Загрузчик определений блоков из JSON файлов.
 class BlockLoader {
-  /// Загружает блок из файла resources/blocks/{id}.json
-  static Future<BlockDefinition> loadFromJson(int id) async {
-    final path = 'resources/blocks/$id.json';
-    final String jsonString = await rootBundle.loadString(path);
-    final Map<String, dynamic> data = jsonDecode(jsonString);
-
-    return _parseBlockDefinition(data);
-  }
-
-  /// Загружает и регистрирует блок.
-  static Future<void> loadAndRegister(int id) async {
-    final block = await loadFromJson(id);
-    BlockRegistry.instance.register(block);
+  static bool _loaded = false;
+  
+  static Future<void> loadAllBlocks() async {
+    if (_loaded) return;
+    
+    print('🔍 Загрузка блоков: $Paths.blocks');
+    
+    try {
+      final jsonString = await rootBundle.loadString(Paths.blocks);
+      final Map<String, dynamic> data = jsonDecode(jsonString);
+      final List<dynamic> blocksJson = data['blocks'];
+      
+      for (final blockJson in blocksJson) {
+        final block = _parseBlockDefinition(blockJson);
+        BlockRegistry.instance.register(block);
+        print('   ✅ Загружен блок: ${block.id} - ${block.name}');
+      }
+      
+      _loaded = true;
+      print('✅ Все блоки загружены: ${blocksJson.length} шт');
+    } catch (e) {
+      print('❌ Ошибка загрузки blocks.json: $e');
+      rethrow;
+    }
   }
 
   static BlockDefinition _parseBlockDefinition(Map<String, dynamic> json) {
     final id = json['id'] as int;
     final name = json['name'] as String;
     final isSolid = json['isSolid'] as bool;
-    final texturesJson = json['textures'] as Map<String, dynamic>;
-    final color = json['color'] as String;
-
-    final textures = BlockTextures(
-      top: _parseRectUV(texturesJson['top']),
-      bottom: _parseRectUV(texturesJson['bottom']),
-      north: _parseRectUV(texturesJson['north']),
-      south: _parseRectUV(texturesJson['south']),
-      east: _parseRectUV(texturesJson['east']),
-      west: _parseRectUV(texturesJson['west']),
-    );
+    final colorStr = json['color'] as String;
+    final color = Color(int.parse(colorStr, radix: 16));
+    
+    BlockTextures? textures;
+    
+    if (json.containsKey('textures') && json['textures'] != null) {
+      final texturesJson = json['textures'] as Map<String, dynamic>;
+      
+      if (texturesJson.containsKey('all')) {
+        final uv = _parseRectUV(texturesJson['all']);
+        textures = BlockTextures.uniform(uv);
+      } else {
+        textures = BlockTextures(
+          top: _parseRectUV(texturesJson['top']),
+          bottom: _parseRectUV(texturesJson['bottom']),
+          north: _parseRectUV(texturesJson['north']),
+          south: _parseRectUV(texturesJson['south']),
+          east: _parseRectUV(texturesJson['east']),
+          west: _parseRectUV(texturesJson['west']),
+        );
+      }
+    }
 
     return BlockDefinition(
       id: id,
       name: name,
       isSolid: isSolid,
       textures: textures,
-      color: Color(int.tryParse(color, radix: 16) ?? 0xAABBCC),
+      color: color,
     );
   }
 
-  static RectUV _parseRectUV(List<dynamic> arr) {
-    return RectUV(
-      arr[0].toInt(),
-      arr[1].toDouble(),
-      arr[2].toDouble(),
-      arr[3].toDouble(),
-      arr[4].toDouble(),
-    );
+  static RectUV _parseRectUV(dynamic arr) {
+    if (arr is List && arr.length >= 4) {
+      return RectUV(
+        (arr[0] as num).toDouble(),
+        (arr[1] as num).toDouble(),
+        (arr[2] as num).toDouble(),
+        (arr[3] as num).toDouble(),
+      );
+    }
+    return const RectUV(0.0, 0.0, 1.0, 1.0);
   }
 }

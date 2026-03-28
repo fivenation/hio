@@ -1,4 +1,5 @@
-import '../../core/rect_uv.dart';
+import 'package:hio/graphics/blocks/models/block_defenition.dart';
+import 'package:hio/graphics/core/rect_uv.dart';
 
 class BlockTextures {
   final RectUV top;
@@ -7,7 +8,7 @@ class BlockTextures {
   final RectUV south;
   final RectUV east;
   final RectUV west;
-
+  
   const BlockTextures({
     required this.top,
     required this.bottom,
@@ -16,15 +17,32 @@ class BlockTextures {
     required this.east,
     required this.west,
   });
-
-  factory BlockTextures.uniform(RectUV rect) {
+  
+  factory BlockTextures.uniform(RectUV uv) {
     return BlockTextures(
-      top: rect,
-      bottom: rect,
-      north: rect,
-      south: rect,
-      east: rect,
-      west: rect,
+      top: uv,
+      bottom: uv,
+      north: uv,
+      south: uv,
+      east: uv,
+      west: uv,
     );
+  }
+  
+  RectUV? getFace(FaceDirection direction) {
+    switch (direction) {
+      case FaceDirection.top:
+        return top;
+      case FaceDirection.bottom:
+        return bottom;
+      case FaceDirection.north:
+        return north;
+      case FaceDirection.south:
+        return south;
+      case FaceDirection.east:
+        return east;
+      case FaceDirection.west:
+        return west;
+    }
   }
 }

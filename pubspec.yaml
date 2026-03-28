@@ -18,6 +18,8 @@ dependencies:
   flutter_bloc: ^8.1.6
   freezed_annotation: ^2.4.4
   window_manager: ^0.5.1
+  image: ^4.8.0
+  args: ^2.7.0
 
 dev_dependencies:
   flutter_test:
@@ -31,4 +33,8 @@ flutter:
   assets:
   - resources/data/objects/
   - resources/images/objects/
+  - resources/images/textures/atlas_32.png
+  - resources/images/textures/atlas_64.png
+  - resources/images/textures/atlas_128.png
+  - resources/data/blocks.json
   - resources/maps/

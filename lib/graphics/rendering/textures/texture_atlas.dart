@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
+import 'package:hio/core/resources/paths.dart';
 import '../../core/rect_uv.dart';
 
 class TextureAtlasManager {
@@ -9,73 +10,84 @@ class TextureAtlasManager {
 
   TextureAtlasManager._internal();
 
-  final Map<int, Image> _atlases = {};
-  int _cellSize = 64;
+  ui.Image? _atlas32;
+  ui.Image? _atlas64;
+  ui.Image? _atlas128;
+  bool _debugPrinted = false;
 
-  /// Создаёт пустую текстуру-заглушку для тестирования
-  Future<Image> _createPlaceholderImage() async {
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-    final paint = Paint()..color = const Color(0xFF808080);
-    canvas.drawRect(
-      Rect.fromLTWH(
-        0,
-        0,
-        _cellSize.toDouble(),
-        _cellSize.toDouble(),
-      ),
-      paint,
-    );
-    final picture = recorder.endRecording();
-    return picture.toImage(_cellSize, _cellSize);
+  Future<void> loadAllAtlases() async {
+    await Future.wait([
+      loadAtlas(32),
+      loadAtlas(64),
+      loadAtlas(128),
+    ]);
   }
 
-  void setTextureSize(int size) {
-    _cellSize = size;
-  }
-
-  Future<void> loadAtlas(int atlasId) async {
-    final path = 'resources/textures/atlas_${_cellSize}_$atlasId.png';
+  Future<void> loadAtlas(int size) async {
+    final path = Paths.texture('atlas_$size.png');
+    
     try {
       final data = await rootBundle.load(path);
-      final image = await _decodeImageFromListAsync(data.buffer.asUint8List());
-      _atlases[atlasId] = image;
+      final image = await _decodeImageFromList(data.buffer.asUint8List());
+      
+      switch (size) {
+        case 32:
+          _atlas32 = image;
+          break;
+        case 64:
+          _atlas64 = image;
+          break;
+        case 128:
+          _atlas128 = image;
+          break;
+      }
+      
+      print('✅ Атлас ${size}px загружен (${image.width}x${image.height})');
     } catch (e) {
-      // Если файл не найден, создаём заглушку
-      final placeholder = await _createPlaceholderImage();
-      _atlases[atlasId] = placeholder;
+      print('❌ Атлас ${size}px не найден: $path');
     }
   }
-  
-  /// Вспомогательный метод для преобразования decodeImageFromList в Future
-  Future<Image> _decodeImageFromListAsync(Uint8List bytes) {
-    final completer = Completer<Image>();
-    decodeImageFromList(bytes, (image) {
+
+  ui.Image? getAtlas(int size) {
+    switch (size) {
+      case 32:
+        return _atlas32;
+      case 64:
+        return _atlas64;
+      case 128:
+        return _atlas128;
+      default:
+        return null;
+    }
+  }
+
+  Rect? getTextureRect(RectUV uv, int textureSize) {
+    final atlas = getAtlas(textureSize);
+    if (atlas == null) return null;
+
+    final rect = Rect.fromLTWH(
+      uv.left * atlas.width,
+      uv.top * atlas.height,
+      (uv.right - uv.left) * atlas.width,
+      (uv.bottom - uv.top) * atlas.height,
+    );
+    
+    if (!_debugPrinted && uv.left == 0.0625 && uv.top == 0.0 && textureSize == 128) {
+      _debugPrinted = true;
+      print('   Расчет для атласа ${textureSize}px:');
+      print('   ${uv.left} * ${atlas.width} = ${uv.left * atlas.width}');
+      print('   ${uv.top} * ${atlas.height} = ${uv.top * atlas.height}');
+      print('   (${uv.right}-${uv.left}) * ${atlas.width} = ${(uv.right - uv.left) * atlas.width}');
+    }
+    
+    return rect;
+  }
+
+  Future<ui.Image> _decodeImageFromList(Uint8List bytes) async {
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromList(bytes, (image) {
       completer.complete(image);
     });
     return completer.future;
-  }
-
-  Image? getAtlas(int atlasId) => _atlases[atlasId];
-
-  bool isLoaded(int atlasId) => _atlases.containsKey(atlasId);
-
-  Rect? getTextureRect(RectUV uv) {
-    final atlas = _atlases[uv.atlasId];
-    if (atlas == null) return null;
-
-    final left = uv.left * atlas.width;
-    final top = uv.top * atlas.height;
-    final right = uv.right * atlas.width;
-    final bottom = uv.bottom * atlas.height;
-
-    return Rect.fromLTRB(left, top, right, bottom);
-  }
-
-  void dispose() {
-    for (final image in _atlases.values) {
-      image.dispose();
-    }
-    _atlases.clear();
   }
 }

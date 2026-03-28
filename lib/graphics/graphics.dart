@@ -7,6 +7,7 @@ import 'package:hio/features/settings/settings_cubit.dart';
 import 'package:hio/features/settings/tools/fps_counder.dart';
 import 'package:hio/features/input/game_controls.dart';
 import 'package:hio/features/input/input_manager.dart';
+import 'package:hio/graphics/blocks/block_loader.dart';
 import 'package:hio/graphics/blocks/block_registry.dart';
 import 'package:hio/graphics/core/camera.dart';
 import 'package:hio/graphics/entities/player.dart';
@@ -23,7 +24,6 @@ import 'package:hio/graphics/world/models/world_map.dart';
 class AppGraphics extends FlameGame
     with KeyboardEvents, MouseMovementDetector, WidgetsBindingObserver {
   late final GameWorld _world;
-  late final InputManager _inputManager;
   late final GameControls _gameControls;
   late final WorldRenderer _worldRenderer;
   late final Minimap _minimap;
@@ -31,6 +31,7 @@ class AppGraphics extends FlameGame
   late final SettingsCubit _settingsCubit;
 
   // Important!
+  final _inputManager = InputManager();
   late final ProjectionCamera _camera = ProjectionCamera(
     screenWidth: size.x,
     screenHeight: size.y,
@@ -70,9 +71,9 @@ class AppGraphics extends FlameGame
     registry.registerDefaultBlocks();
 
     // Загружаем текстуры
-    final textureManager = TextureAtlasManager.instance;
-    textureManager.setTextureSize(64);
-    await textureManager.loadAtlas(0);
+    final atlasManager = TextureAtlasManager.instance;
+    await atlasManager.loadAllAtlases();
+    await BlockLoader.loadAllBlocks();
 
     // Создаём игрока из загруженных данных
     final player = Player(
@@ -90,8 +91,6 @@ class AppGraphics extends FlameGame
       lightSources: _lightSources,
     );
 
-    // Система ввода
-    _inputManager = InputManager();
     _gameControls = GameControls(
       input: _inputManager,
       player: _world.player,
