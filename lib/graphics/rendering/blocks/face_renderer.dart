@@ -43,7 +43,7 @@ class FaceRenderer {
           const Offset(0.0, 0.0),
         ];
 
-        final indices = [0, 1, 2, 0, 2, 3];
+        final indices = [0, 1, 2, 0, 3, 2];
 
         final vertices = Vertices(
           VertexMode.triangles,

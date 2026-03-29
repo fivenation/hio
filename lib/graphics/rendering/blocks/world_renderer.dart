@@ -240,7 +240,7 @@ class WorldRenderer {
                 _isFaceVisibleToCamera(
                     x, y, z, FaceDirection.south, player)))) {
       _addFace(
-        [(x1, y1, z1), (x1, y1, z2), (x2, y1, z2), (x2, y1, z1)],
+        [(x2, y1, z1), (x1, y1, z1), (x1, y1, z2), (x2, y1, z2)],
         faceColor,
         player,
         block.textures?.south,
@@ -270,7 +270,7 @@ class WorldRenderer {
             (isVeryClose ||
                 _isFaceVisibleToCamera(x, y, z, FaceDirection.west, player)))) {
       _addFace(
-        [(x1, y1, z1), (x1, y2, z1), (x1, y2, z2), (x1, y1, z2)],
+        [(x1, y2, z1), (x1, y1, z1), (x1, y1, z2), (x1, y2, z2)],
         faceColor,
         player,
         block.textures?.west,
@@ -301,7 +301,7 @@ class WorldRenderer {
                 _isFaceVisibleToCamera(
                     x, y, z, FaceDirection.bottom, player)))) {
       _addFace(
-        [(x1, y1, z1), (x1, y2, z1), (x2, y2, z1), (x2, y1, z1)],
+        [(x1, y2, z1), (x2, y2, z1), (x2, y1, z1), (x1, y1, z1)],
         faceColor,
         player,
         block.textures?.bottom,
@@ -328,6 +328,22 @@ class WorldRenderer {
 
     final cosA = cos(player.angle);
     final sinA = sin(player.angle);
+
+    if (distance < 0.5) {
+      if (uv != null && distance < 1) {
+        print(
+            'UV: left=${uv.left}, top=${uv.top}, right=${uv.right}, bottom=${uv.bottom}');
+        print('UV width=${uv.width}, height=${uv.height}');
+      }
+      print('=== Face depth check ===');
+      for (final (x, y, z) in corners) {
+        final dx = x - player.x;
+        final dy = y - player.y;
+        final dz = z - player.z;
+        final depth = dx * cosA + dy * sinA;
+        print('Point ($x, $y, $z): depth=$depth');
+      }
+    }
 
     for (final (x, y, z) in corners) {
       final dx = x - player.x;

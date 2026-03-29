@@ -67,7 +67,7 @@ class TextureAtlasManager {
 
     final rect = Rect.fromLTWH(
       uv.left * atlas.width,
-      uv.top * atlas.height - 1,
+      uv.top * atlas.height - textureSize / 128,
       (uv.right - uv.left) * atlas.width,
       (uv.bottom - uv.top) * atlas.height,
     );

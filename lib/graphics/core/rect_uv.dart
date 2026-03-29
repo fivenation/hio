@@ -11,6 +11,9 @@ class RectUV {
     this.bottom,
   );
 
+  double get width => right - left;
+  double get height => bottom - top;
+
   @override
   String toString() => 'RectUV(left: $left, top: $top, right: $right, bottom: $bottom)';
 }
