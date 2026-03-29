@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:hio/graphics/rendering/textures/texture_lod.dart';
 import '../../core/rect_uv.dart';
 
@@ -42,9 +41,11 @@ class FaceRenderer {
       if (texturePaint != null && texturePaint.shader != null) {
         int n = 1;
         if (_currentFrameTriangles < maxTrianglesPerFrame) {
-          if (safeDistance < 2.0)
+          if (safeDistance < 2.0) {
             n = 4;
-          else if (safeDistance < 6.0) n = 2;
+          } else if (safeDistance < 6.0) {
+            n = 2;
+          }
         }
 
         // Пытаемся взять из кэша или создаем новое
@@ -138,11 +139,12 @@ class FaceRenderer {
   void _renderFallbackPath(
       Canvas canvas, List<Offset> points, Color color, double opacity) {
     final paint = Paint()
-      ..color = color.withOpacity(opacity)
+      ..color = color.withAlpha((opacity * 255).round())
       ..style = PaintingStyle.fill;
     final path = Path()..moveTo(points[0].dx, points[0].dy);
-    for (int i = 1; i < points.length; i++)
+    for (int i = 1; i < points.length; i++) {
       path.lineTo(points[i].dx, points[i].dy);
+    }
     canvas.drawPath(path..close(), paint);
   }
 

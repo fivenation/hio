@@ -97,7 +97,8 @@ class TextureLODManager {
 
     final paint = Paint()
       ..shader = shader
-      ..filterQuality = FilterQuality.none;
+      ..filterQuality = FilterQuality.none
+      ..isAntiAlias = false;
 
     if (opacity < 1.0) {
       paint.color = const Color(0xFFFFFFFF).withAlpha(

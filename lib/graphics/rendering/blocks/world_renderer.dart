@@ -28,7 +28,6 @@ class WorldRenderer {
       List.generate(_bucketCount, (_) => []);
   double _maxDepth = 0;
   int _frameCounter = 0;
-  static const int _cleanupInterval = 300;
 
   int get currentFacesCount => _allFaces.length;
   int get currentShaderCacheSize => _lodManager.getCacheSize();
