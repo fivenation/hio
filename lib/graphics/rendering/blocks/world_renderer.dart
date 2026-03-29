@@ -113,7 +113,7 @@ class WorldRenderer {
 
     for (int i = _bucketCount - 1; i >= 0; i--) {
       for (final face in _buckets[i]) {
-        final screenPoints = _camera.projectPoints(face.corners, player);
+        final screenPoints = _camera.projectPoints(face.points3D, player);
         if (screenPoints.length >= 3) {
           _faceRenderer.render(
             canvas,
@@ -122,6 +122,9 @@ class WorldRenderer {
             uv: face.uv,
             distance: face.distance,
             isInsideBlock: face.isInsideBlock,
+            points3D: face.points3D,
+            player: player,
+            camera: _camera,
           );
         }
       }
@@ -318,6 +321,8 @@ class WorldRenderer {
     double distance,
     bool isInsideBlock,
   ) {
+    final screenPoints = _camera.projectPoints(corners, player);
+
     final lod = _lodManager.getLOD(distance);
     if (lod == TextureLOD.none) return;
 
@@ -357,7 +362,8 @@ class WorldRenderer {
 
     if (validPoints > 0) {
       _allFaces.add(_RenderFace(
-        corners: corners,
+        points: screenPoints,
+        points3D: corners,
         color: color,
         depth: totalDepth / validPoints,
         uv: uv,
@@ -446,7 +452,8 @@ class WorldRenderer {
 }
 
 class _RenderFace {
-  final List<(double, double, double)> corners;
+  final List<Offset> points;
+  final List<(double, double, double)> points3D;
   final Color color;
   final double depth;
   final RectUV? uv;
@@ -454,7 +461,8 @@ class _RenderFace {
   final bool isInsideBlock;
 
   _RenderFace({
-    required this.corners,
+    required this.points3D,
+    required this.points,
     required this.color,
     required this.depth,
     this.uv,
