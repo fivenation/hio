@@ -5,11 +5,8 @@ import '../../core/rect_uv.dart';
 class FaceRenderer {
   final TextureLODManager _lodManager = TextureLODManager.instance;
 
-  // КЭШ: Храним сгенерированные объекты Vertices, чтобы не создавать их заново
-  // Ключ - это хэш из координат и UV
   final Map<int, Vertices> _verticesCache = {};
 
-  // Ограничитель нагрузки
   static const int maxTrianglesPerFrame = 5000;
   int _currentFrameTriangles = 0;
 
@@ -48,7 +45,6 @@ class FaceRenderer {
           }
         }
 
-        // Пытаемся взять из кэша или создаем новое
         if (points.length == 4 && n > 1) {
           _currentFrameTriangles += (n * n * 2);
           _drawWithCache(canvas, points, uvs, texturePaint, n);
@@ -63,20 +59,15 @@ class FaceRenderer {
     _renderFallbackPath(canvas, points, color, opacity);
   }
 
-  // Метод отрисовки с использованием кэша
   void _drawWithCache(
       Canvas canvas, List<Offset> p, List<Offset> u, Paint paint, int n) {
-    // Создаем уникальный ключ для этой геометрии
-    // Используем координаты точек (округленные), чтобы кэш работал, когда игрок не двигается
     int cacheKey = Object.hashAll([...p, ...u, n]);
 
     Vertices? v = _verticesCache[cacheKey];
 
     if (v == null) {
-      // Если в кэше нет — создаем (используем старую логику _renderSubdividedQuad)
       v = _buildSubdividedVertices(p, u, n);
 
-      // Если кэш слишком раздулся — чистим его (защита ОП)
       if (_verticesCache.length > 300) _verticesCache.clear();
 
       _verticesCache[cacheKey] = v;
@@ -90,8 +81,6 @@ class FaceRenderer {
     final List<Offset> meshUVs = [];
     final List<int> indices = [];
 
-    // ... (Тут твоя логика генерации сетки из предыдущего шага) ...
-    // Для краткости: генерируем meshPoints, meshUVs и indices для сетки NxN
     for (int j = 0; j <= n; j++) {
       double vFactor = j / n;
       Offset rowStart = Offset.lerp(p[0], p[3], vFactor)!;
