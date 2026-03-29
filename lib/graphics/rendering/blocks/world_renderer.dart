@@ -113,18 +113,17 @@ class WorldRenderer {
 
     for (int i = _bucketCount - 1; i >= 0; i--) {
       for (final face in _buckets[i]) {
-        final screenPoints = _camera.projectPoints(face.points3D, player);
-        if (screenPoints.length >= 3) {
+        final clipResult = _camera.clipAndProjectQuad(face.points3D, player);
+        if (clipResult != null) {
           _faceRenderer.render(
             canvas,
-            screenPoints,
+            clipResult.screenPoints,
+            clipResult.uvPoints,
             face.color,
+            opacity: 1.0,
             uv: face.uv,
             distance: face.distance,
             isInsideBlock: face.isInsideBlock,
-            points3D: face.points3D,
-            player: player,
-            camera: _camera,
           );
         }
       }

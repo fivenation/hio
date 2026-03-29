@@ -37,33 +37,33 @@ class GameWorld {
           if (ix < 0 || ix >= map.width || iy < 0 || iy >= map.height) {
             continue;
           }
-          
+
           final blockId = map.getBlockId(ix, iy, iz);
           if (blockId == 0) continue;
-          
+
           final blockMinX = ix.toDouble();
           final blockMaxX = ix.toDouble() + 1.0;
           final blockMinY = iy.toDouble();
           final blockMaxY = iy.toDouble() + 1.0;
           final blockMinZ = iz.toDouble();
           final blockMaxZ = iz.toDouble() + 1.0;
-          
+
           final closestX = x.clamp(blockMinX, blockMaxX);
           final closestY = y.clamp(blockMinY, blockMaxY);
           final closestZ = z.clamp(blockMinZ, blockMaxZ);
-          
+
           final dx = x - closestX;
           final dy = y - closestY;
           final dz = z - closestZ;
           final distanceSquared = dx * dx + dy * dy + dz * dz;
-          
-          if (distanceSquared < radius * radius) {
+
+          if (distanceSquared < (radius * radius) - 0.001) {
             return false;
           }
         }
       }
     }
-    
+
     return true;
   }
 
