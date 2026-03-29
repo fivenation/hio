@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:hio/graphics/blocks/block_registry.dart';
 import 'package:hio/graphics/blocks/models/block_defenition.dart';
@@ -328,22 +327,6 @@ class WorldRenderer {
 
     final cosA = cos(player.angle);
     final sinA = sin(player.angle);
-
-    if (distance < 0.5) {
-      if (uv != null && distance < 1) {
-        print(
-            'UV: left=${uv.left}, top=${uv.top}, right=${uv.right}, bottom=${uv.bottom}');
-        print('UV width=${uv.width}, height=${uv.height}');
-      }
-      print('=== Face depth check ===');
-      for (final (x, y, z) in corners) {
-        final dx = x - player.x;
-        final dy = y - player.y;
-        final dz = z - player.z;
-        final depth = dx * cosA + dy * sinA;
-        print('Point ($x, $y, $z): depth=$depth');
-      }
-    }
 
     for (final (x, y, z) in corners) {
       final dx = x - player.x;

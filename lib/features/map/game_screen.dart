@@ -43,8 +43,7 @@ class _GameScreenState extends State<GameScreen> with WindowListener {
     _initWindowManager();
 
     final settingsCubit = context.read<SettingsCubit>();
-    
-    // Создаём игру с загруженными данными
+
     _game = AppGraphics(
       map: widget.map,
       playerData: widget.playerData,
@@ -87,14 +86,13 @@ class _GameScreenState extends State<GameScreen> with WindowListener {
   }
 
   Future<void> _initWindowManager() async {
+    final settings = context.read<SettingsCubit>().state.settings;
+
     await windowManager.ensureInitialized();
     windowManager.addListener(this);
 
-    // Устанавливаем минимальный размер окна
     await windowManager.setMinimumSize(const Size(800, 600));
 
-    // Применяем сохранённые настройки
-    final settings = context.read<SettingsCubit>().state.settings;
     await _applyResolution(settings.currentResolution);
     if (settings.fullscreen) {
       await windowManager.setFullScreen(true);

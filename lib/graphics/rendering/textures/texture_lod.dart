@@ -1,6 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:hio/graphics/core/rect_uv.dart';
 import 'package:hio/graphics/rendering/textures/texture_atlas.dart';
@@ -20,9 +18,9 @@ class TextureLODManager {
   TextureLODManager._internal();
 
   TextureLOD getLOD(double distance) {
-    if (distance < 8.0) return TextureLOD.high;
-    if (distance < 16.0) return TextureLOD.medium;
-    if (distance < 32.0) return TextureLOD.low;
+    if (distance < 12.0) return TextureLOD.high;
+    if (distance < 24.0) return TextureLOD.medium;
+    if (distance < 36.0) return TextureLOD.low;
     if (distance < 48.0) return TextureLOD.fog;
     return TextureLOD.none;
   }
@@ -69,7 +67,9 @@ class TextureLODManager {
     if (_shaderCache.containsKey(cacheKey)) {
       final cachedPaint = _shaderCache[cacheKey]!;
       if (opacity < 1.0) {
-        cachedPaint.color = const Color(0xFFFFFFFF).withOpacity(opacity);
+        cachedPaint.color = const Color(0xFFFFFFFF).withAlpha(
+          (opacity * 255.0).round(),
+        );
       }
       return cachedPaint;
     }
@@ -100,9 +100,11 @@ class TextureLODManager {
       ..filterQuality = FilterQuality.none;
 
     if (opacity < 1.0) {
-      paint.color = const Color(0xFFFFFFFF).withOpacity(opacity);
+      paint.color = const Color(0xFFFFFFFF).withAlpha(
+        (opacity * 255.0).round(),
+      );
     }
-// Сохраняем в кэш
+
     _shaderCache[cacheKey] = paint;
 
     _cleanupIfNeeded();

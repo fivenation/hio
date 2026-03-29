@@ -1,6 +1,4 @@
 // features/settings/fps_counter/fps_counter.dart
-
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class FpsCounter {
@@ -74,7 +72,7 @@ class FpsCounter {
       ..color = Colors.black87
       ..style = PaintingStyle.fill;
 
-    final bgRect = Rect.fromLTWH(0, 0, 280, 110);
+    const bgRect = Rect.fromLTWH(0, 0, 280, 110);
     canvas.drawRect(bgRect, paint);
 
     double y = 10;

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:image/image.dart' as img;
@@ -64,11 +66,11 @@ class TextureAtlasBuilder {
     required int tileSize,
   }) async {
     final atlasSize = gridSize * tileSize;
-    final maxTexturesForSize = gridSize * gridSize;
+    const maxTexturesForSize = gridSize * gridSize;
     
-    print('\n📦 Создаю атлас ${tileSize}x${tileSize}');
-    print('   Размер атласа: ${atlasSize}x${atlasSize}');
-    print('   Сетка: ${gridSize}x${gridSize}');
+    print('\n📦 Создаю атлас ${tileSize}x$tileSize');
+    print('   Размер атласа: ${atlasSize}x$atlasSize');
+    print('   Сетка: ${gridSize}x$gridSize');
     print('   Максимум текстур: $maxTexturesForSize');
     print('   Текстур для обработки: ${textureFiles.length}');
 
@@ -128,7 +130,7 @@ class TextureAtlasBuilder {
     }
     
     // Сохраняем атлас
-    final atlasPath = '$outputDir/atlas_${tileSize}.png';
+    final atlasPath = '$outputDir/atlas_$tileSize.png';
     final pngBytes = img.encodePng(atlas);
     await File(atlasPath).writeAsBytes(pngBytes);
     
@@ -136,7 +138,7 @@ class TextureAtlasBuilder {
     final fileSize = await File(atlasPath).length();
     final fileSizeKB = (fileSize / 1024).toStringAsFixed(1);
     
-    print('   💾 Сохранен: ${atlasPath.split('/').last} (${fileSizeKB} KB)');
+    print('   💾 Сохранен: ${atlasPath.split('/').last} ($fileSizeKB KB)');
     print('   📊 Использовано текстур: $textureIndex из ${textureFiles.length}');
     
     if (textureFiles.length > maxTexturesForSize) {
@@ -146,7 +148,7 @@ class TextureAtlasBuilder {
 
   /// Генерирует файл с информацией о расположении текстур
   Future<void> generateIndexFile(List<File> textureFiles) async {
-    final maxTexturesForSize = gridSize * gridSize;
+    const maxTexturesForSize = gridSize * gridSize;
     final texturesToProcess = textureFiles.take(maxTexturesForSize).toList();
     
     final index = <Map<String, dynamic>>[];
@@ -213,11 +215,11 @@ class TextureAtlasBuilder {
     print('=' * 70);
     print('📁 Входная папка: $inputDir');
     print('📁 Выходная папка: $outputDir');
-    print('📐 Сетка: ${gridSize}x${gridSize} (максимум $maxTextures текстур)');
+    print('📐 Сетка: ${gridSize}x$gridSize (максимум $maxTextures текстур)');
     print('📏 Размеры атласов:');
     for (final tileSize in tileSizes) {
       final atlasSize = gridSize * tileSize;
-      print('   - ${tileSize}x${tileSize} текстур -> атлас ${atlasSize}x${atlasSize}');
+      print('   - ${tileSize}x$tileSize текстур -> атлас ${atlasSize}x$atlasSize');
     }
     
     // Создаем выходную папку
@@ -250,7 +252,7 @@ class TextureAtlasBuilder {
       print('   Остальные ${textures.length - maxTextures} текстур будут проигнорированы');
     }
     
-    print('\n' + '=' * 70);
+    print('\n${'=' * 70}');
     print('🎨 Генерация атласов');
     print('=' * 70);
     
@@ -265,7 +267,7 @@ class TextureAtlasBuilder {
     // Генерируем индексный файл
     await generateIndexFile(textures);
     
-    print('\n' + '=' * 70);
+    print('\n${'=' * 70}');
     print('✨ Готово!');
     print('=' * 70);
     print('\n📖 Как использовать в блоке:');

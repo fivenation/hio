@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hio/core/resources/paths.dart';
 import '../../core/rect_uv.dart';
@@ -13,7 +14,6 @@ class TextureAtlasManager {
   ui.Image? _atlas32;
   ui.Image? _atlas64;
   ui.Image? _atlas128;
-  bool _debugPrinted = false;
 
   Future<void> loadAllAtlases() async {
     await Future.wait([
@@ -42,9 +42,13 @@ class TextureAtlasManager {
           break;
       }
 
-      print('✅ Атлас ${size}px загружен (${image.width}x${image.height})');
+      if (kDebugMode) {
+        print('✅ Атлас ${size}px загружен (${image.width}x${image.height})');
+      }
     } catch (e) {
-      print('❌ Атлас ${size}px не найден: $path');
+      if (kDebugMode) {
+        print('❌ Атлас ${size}px не найден: $path');
+      }
     }
   }
 

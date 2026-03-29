@@ -58,7 +58,7 @@ class FaceRenderer {
     }
 
     paint = Paint()
-      ..color = color.withOpacity(opacity)
+      ..color = color.withAlpha((opacity * 255).round())
       ..style = PaintingStyle.fill;
 
     final path = Path();

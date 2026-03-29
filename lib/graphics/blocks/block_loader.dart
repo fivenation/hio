@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hio/core/resources/paths.dart';
 import 'package:hio/graphics/blocks/models/block_defenition.dart';
@@ -12,7 +13,9 @@ class BlockLoader {
   static Future<void> loadAllBlocks() async {
     if (_loaded) return;
     
-    print('🔍 Загрузка блоков: $Paths.blocks');
+    if (kDebugMode) {
+      print('🔍 Загрузка блоков: $Paths.blocks');
+    }
     
     try {
       final jsonString = await rootBundle.loadString(Paths.blocks);
@@ -22,13 +25,16 @@ class BlockLoader {
       for (final blockJson in blocksJson) {
         final block = _parseBlockDefinition(blockJson);
         BlockRegistry.instance.register(block);
-        print('   ✅ Загружен блок: ${block.id} - ${block.name}');
       }
       
       _loaded = true;
-      print('✅ Все блоки загружены: ${blocksJson.length} шт');
+      if (kDebugMode) {
+        print('✅ Все блоки загружены: ${blocksJson.length} шт');
+      }
     } catch (e) {
-      print('❌ Ошибка загрузки blocks.json: $e');
+      if (kDebugMode) {
+        print('❌ Ошибка загрузки blocks.json: $e');
+      }
       rethrow;
     }
   }

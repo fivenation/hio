@@ -21,7 +21,6 @@ class Player {
   double _rotateDelta = 0.0;
   double _pitchDelta = 0.0;
   bool _wasInsideBlock = false;
-  double _insideBlockTimer = 0.0;
 
   Player({
     required this.x,

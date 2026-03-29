@@ -47,10 +47,9 @@ class _MapSelectionScreenState extends State<MapSelectionScreen> {
 
       final loaded = await WorldLoader.loadMap(map.name);
 
-      // Закрываем лоадер
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
 
-      // Открываем игровой экран
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -65,7 +64,7 @@ class _MapSelectionScreenState extends State<MapSelectionScreen> {
         );
       }
     } catch (e) {
-      // Закрываем лоадер если открыт
+      // ignore: use_build_context_synchronously
       Navigator.pop(context);
       
       // Показываем ошибку

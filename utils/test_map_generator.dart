@@ -1,9 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:hio/graphics/core/constants.dart';
 import 'package:hio/graphics/world/models/world_map.dart';
 
-// Временная заглушка для PlayerData, так как его нет в graphics/world/models
 class PlayerData {
   final double x;
   final double y;
@@ -19,10 +20,8 @@ class PlayerData {
 }
 
 void main() {
-  // Генерируем карту
   final world = TestMapGenerator.generateRoomMap();
 
-  // Создаём JSON структуру
   final mapData = {
     'name': 'room_2',
     'displayName': 'Тестовая комната 2',
@@ -34,8 +33,7 @@ void main() {
     'blocks': _exportBlocks(world),
   };
 
-  // Сохраняем в файл
-  final jsonString = JsonEncoder.withIndent('  ').convert(mapData);
+  final jsonString = const JsonEncoder.withIndent('  ').convert(mapData);
   File('../../../resources/maps/room_2.json').writeAsStringSync(jsonString);
 
   print('✅ Карта сохранена в assets/maps/room.json');
@@ -59,7 +57,6 @@ List<List<int>> _exportBlocks(WorldMap world) {
   return blocks;
 }
 
-// Копируем твой генератор (можно импортировать, но для простоты копируем)
 class TestMapGenerator {
   static WorldMap generateRoomMap() {
     const width = 70;
@@ -72,7 +69,6 @@ class TestMapGenerator {
 
     final world = WorldMap(width: width, height: height);
 
-    // ========== СТЕНЫ КОМНАТЫ (серые) ==========
     for (int z = -1; z <= 4; z++) {
       for (int x = roomStart; x < roomEnd; x++) {
         for (int y = roomStart; y < roomEnd; y++) {

@@ -11,7 +11,6 @@ class Minimap {
     final map = world.map;
     final player = world.player;
 
-    // Рисуем фон
     final bgPaint = Paint()..color = const Color(0xFF000000);
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()),
@@ -49,7 +48,6 @@ class Minimap {
       }
     }
 
-    // Рисуем игрока
     final playerX = (size / 2).toDouble();
     final playerY = (size / 2).toDouble();
     final playerPaint = Paint()..color = const Color(0xFFFF0000);
@@ -60,8 +58,7 @@ class Minimap {
     );
 
     final dirX = playerX + cos(player.angle) * cellSize * 4;
-    final dirY =
-        playerY + sin(player.angle) * cellSize * 4; // плюс вместо минуса!
+    final dirY = playerY + sin(player.angle) * cellSize * 4;
 
     final dirPaint = Paint()
       ..color = const Color(0xFFFFFF00)
@@ -72,18 +69,18 @@ class Minimap {
       dirPaint,
     );
 
-// Текст с углом и направлением
     final angleDeg = (player.angle * 180 / pi).toStringAsFixed(0);
     String direction;
-// Исправляем направления для миникарты
-    if (player.angle >= -pi / 4 && player.angle < pi / 4)
+
+    if (player.angle >= -pi / 4 && player.angle < pi / 4) {
       direction = "E";
-    else if (player.angle >= pi / 4 && player.angle < 3 * pi / 4)
+    } else if (player.angle >= pi / 4 && player.angle < 3 * pi / 4) {
       direction = "N";
-    else if (player.angle >= 3 * pi / 4 || player.angle < -3 * pi / 4)
+    } else if (player.angle >= 3 * pi / 4 || player.angle < -3 * pi / 4) {
       direction = "W";
-    else
+    } else {
       direction = "S";
+    }
 
     final textPainter = TextPainter(
       text: TextSpan(
@@ -99,7 +96,6 @@ class Minimap {
     textPainter.layout();
     textPainter.paint(canvas, const Offset(5, 5));
 
-    // Подписи направлений
     final labels = [
       ('N', playerX, playerY - 15),
       ('S', playerX, playerY + 15),

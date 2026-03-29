@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 import 'mouse_capture.dart';
 
 class DesktopMouseCapture implements MouseCaptureService {
@@ -65,7 +66,9 @@ class DesktopMouseCapture implements MouseCaptureService {
           .lookupFunction<Void Function(), void Function()>('CenterMouse');
       centerFunc();
     } catch (e) {
-      print('Center failed: $e');
+      if (kDebugMode) {
+        print('Center failed: $e');
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hio/graphics/world/models/lighting.dart';
 import 'package:hio/graphics/world/models/map_metadata.dart';
@@ -18,7 +19,9 @@ class WorldLoader {
           .map((json) => MapMetadata.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('Error loading map manifest: $e');
+      if (kDebugMode) {
+        print('Error loading map manifest: $e');
+      }
       return [];
     }
   }
