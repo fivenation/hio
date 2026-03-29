@@ -7,7 +7,7 @@ class GraphicsConsts {
   // Параметры игрока
   static const double playerHeight = 1.5;
   static const double defaultPlayerPitch = 0.0;
-  static const double playerRadius = 0.35;
+  static const double playerRadius = 0.45;
   static const double playerSpeed = 5.0;
   static const double playerRotationSpeed = 2.0;
   static const double playerPitchSpeed = 1.5;

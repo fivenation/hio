@@ -4,9 +4,6 @@ import 'package:hio/graphics/core/constants.dart';
 class Player {
   double x, y, z, angle, pitch;
 
-  static const double cameraRadius = 0.3;
-  static const double pushForce = 0.95;
-
   bool _moveForward = false;
   bool _moveBackward = false;
   bool _strafeLeft = false;
@@ -83,17 +80,19 @@ class Player {
     _strafeRight = false;
   }
 
-  void updatePosition(double dt,
-      bool Function(double x, double y, double z, double radius) canMove) {
+  void updatePosition(
+    double dt,
+    bool Function(double x, double y, double z, double radius) canMove,
+  ) {
     final (dx, dy) = calculateMovement(dt);
 
     if (dx != 0) {
       final newX = x + dx;
-      if (canMove(newX, y, z, cameraRadius)) {
+      if (canMove(newX, y, z, GraphicsConsts.playerRadius)) {
         x = newX;
       } else {
         final slideX = x + dx;
-        if (canMove(slideX, y, z, cameraRadius)) {
+        if (canMove(slideX, y, z, GraphicsConsts.playerRadius)) {
           x = slideX;
         }
       }
@@ -101,11 +100,11 @@ class Player {
 
     if (dy != 0) {
       final newY = y + dy;
-      if (canMove(x, newY, z, cameraRadius)) {
+      if (canMove(x, newY, z, GraphicsConsts.playerRadius)) {
         y = newY;
       } else {
         final slideY = y + dy;
-        if (canMove(x, slideY, z, cameraRadius)) {
+        if (canMove(x, slideY, z, GraphicsConsts.playerRadius)) {
           y = slideY;
         }
       }
@@ -117,8 +116,9 @@ class Player {
   }
 
   void _resolveCollision(
-      bool Function(double x, double y, double z, double radius) canMove) {
-    if (canMove(x, y, z, cameraRadius)) {
+    bool Function(double x, double y, double z, double radius) canMove,
+  ) {
+    if (canMove(x, y, z, GraphicsConsts.playerRadius)) {
       _wasInsideBlock = false;
       return;
     }
@@ -132,7 +132,7 @@ class Player {
         final testX = x + cos(angleOffset) * attempt;
         final testY = y + sin(angleOffset) * attempt;
 
-        if (canMove(testX, testY, z, cameraRadius)) {
+        if (canMove(testX, testY, z, GraphicsConsts.playerRadius)) {
           x = testX;
           y = testY;
           return;
@@ -142,7 +142,7 @@ class Player {
 
     final backX = x - cos(angle) * 0.5;
     final backY = y - sin(angle) * 0.5;
-    if (canMove(backX, backY, z, cameraRadius)) {
+    if (canMove(backX, backY, z, GraphicsConsts.playerRadius)) {
       x = backX;
       y = backY;
     }

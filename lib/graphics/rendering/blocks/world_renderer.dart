@@ -46,6 +46,8 @@ class WorldRenderer {
   void render(Canvas canvas, GameWorld world) {
     final player = world.player;
 
+    _cleanupCaches();
+    _faceRenderer.resetFrameBudget();
     _camera.updateCache(player);
     _columnCache.clear();
     _allFaces.clear();
@@ -91,12 +93,6 @@ class WorldRenderer {
           );
         }
       }
-    }
-
-    _frameCounter++;
-    if (_frameCounter >= _cleanupInterval) {
-      _cleanupCaches();
-      _frameCounter = 0;
     }
 
     _maxDepth = 0;
@@ -436,12 +432,18 @@ class WorldRenderer {
   }
 
   void _cleanupCaches() {
-    if (_columnCache.length > 5000) {
-      _columnCache.clear();
+    _frameCounter++;
+    _allFaces.clear();
+
+    if (_frameCounter % 300 == 0) {
+      _camera.clearCache(); // Чистим кэш проекций точек
+      _lodManager.clearCache(); // Чистим ImageShader-ы (ВАЖНО!)
+      _faceRenderer.clearCache(); // Чистим Vertices-кэш
+      _columnCache.clear(); // Чистим данные о колонках
+
+      // Подсказка для Dart: можно вызвать принудительный сбор мусора
+      // (в режиме дебага это поможет увидеть утечки)
     }
-    _lodManager.clearCache();
-    _camera.clearCache();
-    _faceRenderer.clearCache();
   }
 
   void clearCache() {
