@@ -2,16 +2,9 @@ import 'dart:math';
 import 'package:hio/graphics/core/constants.dart';
 
 class Player {
-  double x;
-  double y;
-  double z; // Высота камеры
-  double angle;
-  double pitch;
+  double x, y, z, angle, pitch;
 
-  // Радиус коллизии камеры (меньше радиуса игрока для smooth движения)
   static const double cameraRadius = 0.3;
-
-  // Вес для сглаживания выталкивания из блоков
   static const double pushForce = 0.95;
 
   bool _moveForward = false;
@@ -94,7 +87,6 @@ class Player {
       bool Function(double x, double y, double z, double radius) canMove) {
     final (dx, dy) = calculateMovement(dt);
 
-    // Пробуем движение по X
     if (dx != 0) {
       final newX = x + dx;
       if (canMove(newX, y, z, cameraRadius)) {
@@ -107,7 +99,6 @@ class Player {
       }
     }
 
-    // Пробуем движение по Y
     if (dy != 0) {
       final newY = y + dy;
       if (canMove(x, newY, z, cameraRadius)) {
@@ -134,7 +125,6 @@ class Player {
 
     _wasInsideBlock = true;
 
-    // Поиск безопасной позиции
     for (double attempt = 0.05; attempt <= 0.5; attempt += 0.05) {
       for (double angleOffset = 0;
           angleOffset < 2 * pi;
@@ -150,7 +140,6 @@ class Player {
       }
     }
 
-    // Откат назад
     final backX = x - cos(angle) * 0.5;
     final backY = y - sin(angle) * 0.5;
     if (canMove(backX, backY, z, cameraRadius)) {
