@@ -7,8 +7,8 @@ class BlockDefinition {
   final int id;
   final String name;
   final bool isSolid;
-  final BlockTextures? textures;  // Теперь опциональный
-  final Color color;              // Fallback цвет, если нет текстур
+  final BlockTextures? textures; 
+  final Color color;  
 
   const BlockDefinition({
     required this.id,

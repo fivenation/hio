@@ -39,9 +39,9 @@ class FaceRenderer {
         int n = 1;
         if (_currentFrameTriangles < maxTrianglesPerFrame) {
           if (safeDistance < 2.0) {
-            n = 4;
+            n = 12;
           } else if (safeDistance < 6.0) {
-            n = 2;
+            n = 4;
           }
         }
 
@@ -67,9 +67,7 @@ class FaceRenderer {
 
     if (v == null) {
       v = _buildSubdividedVertices(p, u, n);
-
       if (_verticesCache.length > 300) _verticesCache.clear();
-
       _verticesCache[cacheKey] = v;
     }
 
@@ -118,8 +116,12 @@ class FaceRenderer {
       indices.addAll([0, i, i + 1]);
     }
     canvas.drawVertices(
-      Vertices(VertexMode.triangles, points,
-          textureCoordinates: uvs, indices: indices),
+      Vertices(
+        VertexMode.triangles,
+        points,
+        textureCoordinates: uvs,
+        indices: indices,
+      ),
       BlendMode.srcOver,
       paint,
     );
@@ -137,7 +139,6 @@ class FaceRenderer {
     canvas.drawPath(path..close(), paint);
   }
 
-  // ПРИНУДИТЕЛЬНАЯ ОЧИСТКА
   void clearCache() {
     _verticesCache.clear();
     _currentFrameTriangles = 0;

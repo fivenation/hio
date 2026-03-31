@@ -11,7 +11,7 @@ class ProjectionCamera {
 
   static const double minDepth = 0.05;
 
-  double _forwardX = 0, _forwardY = 0, _forwardZ = 0;
+  double forwardX = 0, forwardY = 0, forwardZ = 0;
   double _rightX = 0, _rightY = 0, _rightZ = 0;
   double _upX = 0, _upY = 0, _upZ = 0;
 
@@ -56,18 +56,18 @@ class ProjectionCamera {
     final cosPitch = cos(pitch);
     final sinPitch = sin(pitch);
 
-    _forwardX = cosYaw * cosPitch;
-    _forwardY = sinYaw * cosPitch;
-    _forwardZ = sinPitch;
+    forwardX = cosYaw * cosPitch;
+    forwardY = sinYaw * cosPitch;
+    forwardZ = sinPitch;
 
     _rightX = -sinYaw;
     _rightY = cosYaw;
     _rightZ = 0.0;
 
     // Up: cross(forward, right)
-    _upX = _forwardY * _rightZ - _forwardZ * _rightY;
-    _upY = _forwardZ * _rightX - _forwardX * _rightZ;
-    _upZ = _forwardX * _rightY - _forwardY * _rightX;
+    _upX = forwardY * _rightZ - forwardZ * _rightY;
+    _upY = forwardZ * _rightX - forwardX * _rightZ;
+    _upZ = forwardX * _rightY - forwardY * _rightX;
 
     // Масштаб для перспективы
     _scale = _screenWidth / 2 / tan(horizontalFovRad / 2);
@@ -94,7 +94,7 @@ class ProjectionCamera {
     final dy = y - player.y;
     final dz = z - player.z;
 
-    final forwardDepth = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
+    final forwardDepth = dx * forwardX + dy * forwardY + dz * forwardZ;
 
     final depth = max(forwardDepth, minDepth);
 
@@ -131,7 +131,7 @@ class ProjectionCamera {
     final dy = y - player.y;
     final dz = z - player.z;
 
-    return dx * _forwardX + dy * _forwardY + dz * _forwardZ > minDepth;
+    return dx * forwardX + dy * forwardY + dz * forwardZ > minDepth;
   }
 
   ClipResult? clipAndProjectQuad(
@@ -152,7 +152,7 @@ class ProjectionCamera {
       final dy = corners[i].$2 - player.y;
       final dz = corners[i].$3 - player.z;
 
-      final vz = dx * _forwardX + dy * _forwardY + dz * _forwardZ;
+      final vz = dx * forwardX + dy * forwardY + dz * forwardZ;
       final vx = dx * _rightX + dy * _rightY + dz * _rightZ;
       final vy = dx * _upX + dy * _upY + dz * _upZ;
 

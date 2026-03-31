@@ -10,7 +10,8 @@ import 'package:hio/graphics/blocks/block_loader.dart';
 import 'package:hio/graphics/blocks/block_registry.dart';
 import 'package:hio/graphics/core/camera.dart';
 import 'package:hio/graphics/entities/player.dart';
-import 'package:hio/graphics/rendering/blocks/world_renderer.dart';
+import 'package:hio/graphics/rendering/blocks/face_renderer.dart';
+import 'package:hio/graphics/rendering/world_renderer.dart';
 import 'package:hio/graphics/rendering/minimap.dart';
 import 'package:hio/graphics/world/game_world.dart';
 import 'package:hio/graphics/rendering/textures/texture_atlas.dart';
@@ -38,6 +39,7 @@ class AppGraphics extends FlameGame
 
   // Загруженные данные
   final WorldMap _map;
+  final _faceRenderer = FaceRenderer();
   final PlayerData _playerData;
   final double _ambientLight;
   final List<LightSource> _lightSources;
@@ -101,7 +103,8 @@ class AppGraphics extends FlameGame
     // Рендерер
     _worldRenderer = WorldRenderer(
       camera: _camera,
-      map: _world.map,
+      faceRenderer: _faceRenderer,
+      blockRegistry: registry,
     );
     _minimap = Minimap();
 
@@ -144,12 +147,6 @@ class AppGraphics extends FlameGame
   void render(Canvas canvas) {
     _drawSky(canvas);
     _worldRenderer.render(canvas, _world);
-
-    _fpsCounter.updateMetrics(
-      facesCount: _worldRenderer.currentFacesCount,
-      shaderCacheSize: _worldRenderer.currentShaderCacheSize,
-      columnCacheSize: _worldRenderer.currentColumnCacheSize,
-    );
 
     canvas.save();
     canvas.translate(size.x - 210, 10);
