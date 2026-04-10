@@ -39,9 +39,9 @@ class FaceRenderer {
         int n = 1;
         if (_currentFrameTriangles < maxTrianglesPerFrame) {
           if (safeDistance < 2.0) {
-            n = 12;
-          } else if (safeDistance < 6.0) {
             n = 4;
+          } else if (safeDistance < 6.0) {
+            n = 2;
           }
         }
 

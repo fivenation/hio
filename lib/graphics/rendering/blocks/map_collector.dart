@@ -139,43 +139,50 @@ class MapCollector {
         break;
       case FaceDirection.bottom:
         p = [
-          (xf, yf, zf),
           (xf, yf + 1, zf),
           (xf + 1, yf + 1, zf),
-          (xf + 1, yf, zf)
+          (xf + 1, yf, zf),
+          (xf, yf, zf),
         ]; //
         break;
       case FaceDirection.north: // X+
+        nx = 1;
         p = [
+          (xf + 1, yf + 1, zf),
           (xf + 1, yf, zf),
           (xf + 1, yf, zf + 1),
-          (xf + 1, yf + 1, zf + 1),
-          (xf + 1, yf + 1, zf)
-        ]; //
+          (xf + 1, yf + 1, zf + 1)
+        ];
         break;
+
       case FaceDirection.south: // X-
+        nx = -1;
         p = [
           (xf, yf, zf),
           (xf, yf + 1, zf),
           (xf, yf + 1, zf + 1),
           (xf, yf, zf + 1)
-        ]; //
+        ];
         break;
+
       case FaceDirection.east: // Y+
+        ny = 1;
         p = [
-          (xf, yf + 1, zf),
           (xf + 1, yf + 1, zf),
-          (xf + 1, yf + 1, zf + 1),
-          (xf, yf + 1, zf + 1)
-        ]; //
+          (xf, yf + 1, zf),
+          (xf, yf + 1, zf + 1),
+          (xf + 1, yf + 1, zf + 1)
+        ];
         break;
+
       case FaceDirection.west: // Y-
+        ny = -1;
         p = [
           (xf, yf, zf),
-          (xf, yf, zf + 1),
+          (xf + 1, yf, zf),
           (xf + 1, yf, zf + 1),
-          (xf + 1, yf, zf)
-        ]; //
+          (xf, yf, zf + 1)
+        ];
         break;
     }
 
